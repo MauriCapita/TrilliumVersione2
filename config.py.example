@@ -1,0 +1,12 @@
+"""
+File di configurazione per PrestaShop API
+Copia questo file come config.py e inserisci le tue credenziali
+"""
+
+# URL del tuo negozio PrestaShop (senza slash finale)
+BASE_URL = "https://mio-store.com"
+
+# Chiave API di PrestaShop
+API_KEY = "KWYH69WBFHYCC24RZZNN5ANQXG36H1Q6"
+
+

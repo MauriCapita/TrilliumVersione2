@@ -1,0 +1,24 @@
+La metodologia di Gülich si riferisce al lavoro di Johann Friedrich Gülich, ingegnere svizzero esperto in pompe centrifuga, autore del libro "Centrifugal Pumps" (edizioni Springer), che fornisce un approccio sistematico per il dimensionamento, l'analisi e l'ottimizzazione di pompe centrifughe, inclusi calcoli di pulsazioni di pressione.
+
+Principi Fondamentali
+Gülich enfatizza l'analisi idraulica integrata, considerando interazioni tra girante, diffusore e voluta per minimizzare fluttuazioni di pressione al passaggio delle pale (vane passing frequency). Il metodo usa diagrammi di prestazioni, fattori di correzione per cavitazione e risonanze acustiche, con formule per prevedere ampiezze pulsanti basate su geometria e regime di flusso.​
+
+Applicazione a Pulsazioni
+Per pompe centrifughe, la metodologia calcola la frequenza 
+f
+v
+p
+=
+z
+⋅
+n
+60
+f 
+vp
+ = 
+60
+z⋅n
+  Hz (z = numero pale, n = giri/min), valutando armoniche e smorzamento per limitare pulsazioni sotto l'1-2% della pressione media. Integra analisi numeriche (CFD) e test empirici per evitare vibrazioni, collegandosi a standard come API 610.​
+
+Vantaggi nel Contesto SOP-559
+Questa approccio è rilevante per calcoli di pressure pulsation in pompe centrifughe, permettendo iterazioni su design (es. pale dispari) prima della costruzione, riducendo rischi di fatica e rumore come previsto in procedure interne tipo SOP-559.

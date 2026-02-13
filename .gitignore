@@ -1,0 +1,63 @@
+# Credenziali e configurazioni sensibili
+config.py
+.env
+*.env
+
+# File di esempio config OK (non contiene segreti)
+!config.py.example
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Virtual environment
+venv/
+env/
+.venv/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# File grandi / archivi
+*.zip
+*.tar.gz
+*.rar
+
+# PDF grandi (>50MB) che superano i limiti GitHub
+Technical Documentation Project/External Documents/International standard/API RP 684*
+Technical Documentation Project/External Documents/International standard/API 610*
+trillium/Tes01/
+trillium/33+ SUPER/3M_MRO_33Plus_Leaflet_general.pdf
+trillium/33+ SUPER/3M_MRO_33Plus_Flyer_general.pdf
+
+# Database locali
+rag_db/
+*.db
+*.sqlite3
+
+# Qdrant data
+qdrant_storage/
+storage/
+
+# Log
+*.log
+
+# Temporary files
+tmp/
+temp/

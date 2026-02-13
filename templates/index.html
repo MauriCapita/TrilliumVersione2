@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PrestaShop - Gestione Ordini e Clienti</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📦</text></svg>">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-content">
+                <div>
+                    <h1>📦 PrestaShop Dashboard</h1>
+                    <p>Gestione Ordini e Clienti</p>
+                </div>
+                <a href="http://localhost:8501" target="_blank" class="trillium-link">
+                    📄 Trillium RAG
+                </a>
+            </div>
+        </header>
+
+        <div class="tabs">
+            <button class="tab-button active" onclick="showTab('orders')">Ordini</button>
+            <button class="tab-button" onclick="showTab('customers')">Clienti</button>
+        </div>
+
+        <!-- Tab Ordini -->
+        <div id="orders-tab" class="tab-content active">
+            <div class="section-header">
+                <h2>Lista Ordini</h2>
+                <button class="refresh-btn" onclick="loadOrders()">🔄 Aggiorna</button>
+            </div>
+            
+            <div class="search-container">
+                <input 
+                    type="text" 
+                    id="order-search" 
+                    class="search-input" 
+                    placeholder="Cerca ordine per ID (es. 53190)..."
+                    oninput="debounceSearch(this.value)"
+                    onkeypress="if(event.key === 'Enter') searchOrder(this.value)"
+                >
+                <span class="search-icon">🔍</span>
+            </div>
+            
+            <div id="orders-loading" class="loading">Caricamento ordini...</div>
+            <div id="orders-container" class="cards-container"></div>
+            <div id="orders-empty" class="empty-state" style="display: none;">
+                Nessun ordine trovato
+            </div>
+        </div>
+
+        <!-- Tab Clienti -->
+        <div id="customers-tab" class="tab-content">
+            <div class="section-header">
+                <h2>Lista Clienti</h2>
+                <button class="refresh-btn" onclick="loadCustomers()">🔄 Aggiorna</button>
+            </div>
+            
+            <div class="search-container">
+                <input 
+                    type="text" 
+                    id="customer-search" 
+                    class="search-input" 
+                    placeholder="Cerca cliente per nome, cognome, email o azienda..."
+                    oninput="filterCustomers(this.value)"
+                >
+                <span class="search-icon">🔍</span>
+            </div>
+            
+            <div id="customers-loading" class="loading">Caricamento clienti...</div>
+            <div id="customers-container" class="cards-container"></div>
+            <div id="customers-empty" class="empty-state" style="display: none;">
+                Nessun cliente trovato
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
+
