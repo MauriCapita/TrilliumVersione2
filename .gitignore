@@ -39,9 +39,8 @@ env/
 *.tar.gz
 *.rar
 
-# PDF grandi (>50MB) che superano i limiti GitHub
-Technical Documentation Project/External Documents/International standard/API RP 684*
-Technical Documentation Project/External Documents/International standard/API 610*
+# Documentazione tecnica (PDF pesanti)
+Technical Documentation Project/
 trillium/Tes01/
 trillium/33+ SUPER/3M_MRO_33Plus_Leaflet_general.pdf
 trillium/33+ SUPER/3M_MRO_33Plus_Flyer_general.pdf
