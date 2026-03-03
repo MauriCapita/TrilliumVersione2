@@ -1,6 +1,10 @@
-# Trillium - Sistema RAG per Documenti Tecnici
+# Trillium V2 — Sistema RAG per Stima Pesi Componenti Pompe
 
-Sistema avanzato di **Retrieval-Augmented Generation (RAG)** progettato per l'indicizzazione e la ricerca semantica su documenti tecnici, disegni, normative e documentazione ingegneristica.
+Sistema avanzato di **Retrieval-Augmented Generation (RAG)** sviluppato per **Trillium Pumps Italy S.p.A.**, progettato per l'indicizzazione e la ricerca semantica su disegni tecnici di pompe, per supportare la **stima AI dei pesi dei componenti principali**.
+
+> **Ultimo aggiornamento:** 27 febbraio 2026 (Fase 14 — Trend Analysis)
+
+> **Nota V2:** Questo progetto (TrilliumVersione2) condivide con TrilliumVersione1 il motore RAG core e lo stesso database vettoriale Qdrant (collezione `trilliumdoc`). L'obiettivo specifico di V2 è la stima dei pesi dei componenti di pompe centrifughe a partire da disegni tecnici storici e parametri di progetto.
 
 ## 📋 Indice
 
@@ -22,16 +26,16 @@ Sistema avanzato di **Retrieval-Augmented Generation (RAG)** progettato per l'in
 
 ## 🎯 Panoramica
 
-Trillium è un sistema RAG completo che permette di:
+Trillium V2 è un sistema RAG completo specializzato nella **stima dei pesi dei componenti di pompe centrifughe**. Permette di:
 
-- **Indicizzare** documenti tecnici in vari formati (PDF, Excel, Word, immagini, ecc.)
-- **Estrarre testo** da documenti complessi usando OCR locale e servizi cloud (OpenAI Vision, Google Cloud Vision, Claude, Gemini)
-- **Cercare semanticamente** nei documenti usando embedding vettoriali
-- **Rispondere a domande** usando LLM avanzati con contesto dai documenti indicizzati
-- **Confrontare risposte** di diversi modelli LLM sulla stessa domanda
+- **Indicizzare** disegni tecnici e documenti di pompe in vari formati (PDF, Excel, TIF, immagini)
+- **Estrarre testo** da disegni tecnici complessi usando OCR locale e servizi cloud (OpenAI Vision, Google Cloud Vision, Claude, Gemini)
+- **Cercare semanticamente** pompe di riferimento con geometria e caratteristiche simili
+- **Rispondere a domande** sui parametri di progetto usando LLM avanzati con contesto dai documenti indicizzati
+- **Supportare la stima pesi** applicando formule di scaling (es. `pnew = pref × f^(2.3÷2.4) × ρnew/ρref`)
 - **Chat conversazionale** stile ChatGPT con domande di follow-up automatiche
 
-Il sistema è ottimizzato per documenti tecnici, disegni ingegneristici, normative e documentazione complessa.
+Il sistema è ottimizzato per disegni tecnici di pompe centrifughe, normative e documentazione ingegneristica. I documenti di riferimento includono ~164 file tra SOP (procedure), Mod (tool di calcolo Excel/Python), normative internazionali e letteratura tecnica.
 
 ---
 
@@ -72,6 +76,21 @@ Il sistema è ottimizzato per documenti tecnici, disegni ingegneristici, normati
 - **Gestione Rate Limits**: Retry automatico con backoff esponenziale per errori 429
 - **Gestione Intelligente**: Fallback automatico da batch a chunk singoli per documenti molto grandi
 - **Nessuna perdita di dati**: Tutti i chunk vengono tracciati e riprovati in caso di errori
+
+### 7. **Premium Features (Fase 12)**
+- **🎓 Onboarding Guidato** — Wizard 3 step per nuovi utenti (intro, stima di prova, spiegazione risultati)
+- **🔔 Alert Intelligenti** — Copertura documentale automatica con barra 0-100% e suggerimenti
+- **📂 Multi-Progetto** — Salva, carica e gestisci configurazioni di parametri con nome progetto
+- **📝 Riferimento Editabile** — Inserisci pesi reali di pompe costruite per validare le stime
+- **📊 Confronto Stima vs Reale** — Accuratezza automatica con badge 🟢/🟡/🔴
+- **📘 Manuale Online** — Guida completa integrata con 7 tab, esempi pratici e FAQ
+
+### 8. **Trend Analysis & Predizione Costi (Fase 14)**
+- **📈 Dashboard Analytics** — KPI in tempo reale (stime totali, peso medio, costo medio, confidenza)
+- **📊 Distribuzione** — Grafici interattivi per famiglia pompa e materiale
+- **💰 Predizione Costi** — Stima costo materia prima (peso × €/kg per materiale)
+- **🎯 Confronto vs Media** — Badge automatico se la stima è sopra/sotto la media della famiglia
+- **📥 Export CSV** — Scarica tutti i dati storico per analisi esterna
 
 ---
 
@@ -401,6 +420,12 @@ L'applicazione si aprirà automaticamente nel browser all'indirizzo `http://loca
    - Status provider LLM e chiavi API
    - Parametri performance
    - Informazioni sistema
+
+6. **📘 Manuale Online**
+   - Guida completa del sistema con 6 tab
+   - Esempi pratici per ogni funzionalità
+   - FAQ e troubleshooting
+   - Workflow tipici e best practice
 
 #### Vantaggi Interfaccia Streamlit
 
@@ -923,5 +948,5 @@ MAX_EMBEDDING_CHARS=6000
 
 ---
 
-**Sviluppato per l'indicizzazione e ricerca semantica su documenti tecnici e ingegneristici.**
+**Sviluppato per Trillium Pumps Italy S.p.A. — Stima AI pesi componenti pompe centrifughe (TrilliumVersione2). Ultimo aggiornamento: 26 febbraio 2026 (sera — Fase 12).**
 

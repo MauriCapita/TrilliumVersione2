@@ -27,6 +27,7 @@ from config import (
     CHUNK_BATCH_SIZE,
 )
 from rag.extractor import extract_text, get_image_extraction_stats, clear_image_extraction_stats
+from rag.enrich_document import enrich_fast, metadata_for_qdrant
 from rich import print
 from tqdm import tqdm
 
@@ -73,7 +74,21 @@ class CustomOpenAIEmbeddingFunction(embedding_functions.EmbeddingFunction):
                 
                 # Gestione errori specifici
                 if "maximum context length" in error_msg or "8192 tokens" in error_msg:
-                    raise ValueError(f"Testo troppo lungo per il modello embedding. Riduci la dimensione del documento o dividilo in chunk più piccoli.")
+                    # Auto sub-chunking: spezza input troppo lungo
+                    sub_results = []
+                    for text in input:
+                        if len(text) > 2000:
+                            # Spezza in sotto-chunk da 2000 chars
+                            sub_chunks = [text[i:i+2000] for i in range(0, len(text), 2000)]
+                            for sc in sub_chunks:
+                                with self._semaphore:
+                                    r = self.client.embeddings.create(model=self.model_name, input=[sc])
+                                    sub_results.append(r.data[0].embedding)
+                        else:
+                            with self._semaphore:
+                                r = self.client.embeddings.create(model=self.model_name, input=[text])
+                                sub_results.append(r.data[0].embedding)
+                    return sub_results
                 
                 # Rate limit (429): retry con backoff esponenziale
                 if "429" in error_msg or "rate_limit" in error_msg.lower() or "tpm" in error_msg.lower():
@@ -267,7 +282,9 @@ def _index_single_file(path: str, db_collection, check_exists_func, add_document
     Restituisce un dict con: success, path, error, chunks_added
     """
     doc_id = path.replace("/", "_")
-    
+    _IMAGE_EXTS = (".tif", ".tiff", ".bmp", ".png", ".jpg", ".jpeg", ".heic", ".heif")
+    is_image = os.path.splitext(path)[1].lower() in _IMAGE_EXTS
+
     # Controlla duplicati
     if check_exists_func(doc_id):
         return {"success": True, "path": path, "skipped": True, "message": "già indicizzato"}
@@ -279,25 +296,84 @@ def _index_single_file(path: str, db_collection, check_exists_func, add_document
             return {"success": False, "path": path, "error": "Nessun testo estratto"}
     except Exception as e:
         return {"success": False, "path": path, "error": f"Errore estrazione: {e}"}
-    
+
+    # Enrichment: estrai metadati strutturati (veloce, basato su regex)
+    try:
+        enrichment = enrich_fast(text, path)
+        enrichment_meta = metadata_for_qdrant(enrichment)
+    except Exception as e:
+        print(f"[yellow]⚠ Enrichment fallito per {os.path.basename(path)}: {e}[/yellow]")
+        enrichment_meta = {}
+
     # Gestione chunk
     if len(text) > MAX_EMBEDDING_CHARS:
-        # Documento grande: dividi in chunk
-        chunk_size = MAX_EMBEDDING_CHARS
+        # Semantic chunking: dividi ai confini naturali del testo
+        from config import CHUNK_SIZE, CHUNK_OVERLAP
+        target_size = min(CHUNK_SIZE, MAX_EMBEDDING_CHARS)
+        
+        # 1. Trova confini semantici (sezioni, paragrafi, formule)
+        import re as _re
+        # Pattern di split: doppio newline, header, sezione numerata, fine tabella
+        split_pattern = r"(?:\n\s*\n|\n(?=\d+[\.\)]\s)|(?<=\.\s)\n(?=[A-Z])|\n(?=[-—]{3,})|\n(?=Tabella|Figura|§))"
+        segments = _re.split(split_pattern, text)
+        segments = [s.strip() for s in segments if s and s.strip()]
+        
+        if not segments:
+            segments = [text]
+        
+        # 2. Unisci segmenti piccoli fino a target_size con overlap
         chunks = []
-        for i in range(0, len(text), chunk_size):
-            chunk = text[i:i + chunk_size]
-            chunks.append(chunk)
+        current_chunk = ""
+        prev_tail = ""  # Per overlap
+        
+        for seg in segments:
+            if len(current_chunk) + len(seg) + 1 <= target_size:
+                current_chunk = (current_chunk + "\n\n" + seg).strip()
+            else:
+                if current_chunk:
+                    chunks.append(current_chunk)
+                    # Overlap: prendi le ultime CHUNK_OVERLAP chars del chunk precedente
+                    if CHUNK_OVERLAP > 0:
+                        prev_tail = current_chunk[-CHUNK_OVERLAP:]
+                    current_chunk = (prev_tail + "\n\n" + seg).strip() if prev_tail else seg
+                else:
+                    # Segmento singolo più grande del target
+                    if len(seg) > target_size:
+                        # Spezza a metà frase
+                        for i in range(0, len(seg), target_size - CHUNK_OVERLAP):
+                            chunk = seg[i:i + target_size]
+                            chunks.append(chunk)
+                        current_chunk = ""
+                    else:
+                        current_chunk = seg
+        
+        if current_chunk:
+            chunks.append(current_chunk)
+        
+        # Fallback: se semantic chunking produce risultati anomali, usa fixed
+        if len(chunks) < 1:
+            chunks = []
+            for i in range(0, len(text), target_size - CHUNK_OVERLAP):
+                chunks.append(text[i:i + target_size])
         
         chunk_ids = []
         chunk_docs = []
         chunk_metas = []
         
         for idx, chunk in enumerate(chunks):
-            chunk_id = f"{doc_id}_chunk_{idx+1}"
+            chunk_id = f"{doc_id}_chunk{idx}"
             chunk_ids.append(chunk_id)
             chunk_docs.append(chunk)
-            chunk_metas.append({"source": path, "chunk": idx + 1, "total_chunks": len(chunks)})
+            chunk_meta = {
+                "source": path,
+                "chunk": idx,
+                "total_chunks": len(chunks),
+                "is_image": is_image,
+                "chunk_type": "semantic",
+            }
+            # Aggiungi metadati arricchiti
+            chunk_meta.update(enrichment_meta)
+            chunk_metas.append(chunk_meta)
         
         # Prova prima batch completo
         try:
@@ -315,7 +391,9 @@ def _index_single_file(path: str, db_collection, check_exists_func, add_document
         max_retries = 3
         for attempt in range(max_retries):
             try:
-                add_documents_func([doc_id], [text], [{"source": path}])
+                doc_meta = {"source": path, "is_image": is_image}
+                doc_meta.update(enrichment_meta)
+                add_documents_func([doc_id], [text], [doc_meta])
                 return {"success": True, "path": path, "chunks_added": 1, "method": "direct"}
             except Exception as e:
                 error_msg = str(e)
@@ -528,7 +606,7 @@ def index_folder_streaming(folder_path: str) -> Generator[Tuple[float, List[str]
             yield (0.0, collector.get_and_clear_lines())
             return
 
-        collection = get_chroma()
+        collection = get_chroma() if VECTOR_DB != "qdrant" else None
         file_list = []
         for root, dirs, files in os.walk(folder_path):
             for f in files:
@@ -663,7 +741,7 @@ def index_folder(folder_path):
         print("[red]La cartella non esiste[/red]")
         return
 
-    collection = get_chroma()
+    collection = get_chroma() if VECTOR_DB != "qdrant" else None
 
     file_list = []
     for root, dirs, files in os.walk(folder_path):
@@ -819,142 +897,6 @@ def index_folder(folder_path):
                 print("[green]✓ File temporanei rimossi[/green]")
         except Exception as e:
             print(f"[yellow]⚠ Impossibile rimuovere file temporanei: {e}[/yellow]")
-
-
-# ============================================================
-# INDICIZZAZIONE DATI API (PRESTSHOP/SHIPPYPRO)
-# ============================================================
-
-def index_api_data(texts: List[str], metadatas: List[Dict], ids: List[str]):
-    """
-    Indicizza dati già formattati da API (PrestaShop/ShippyPro).
-    
-    Args:
-        texts: Lista di testi da indicizzare
-        metadatas: Lista di metadati corrispondenti
-        ids: Lista di ID univoci per ogni documento
-    
-    Returns:
-        Dict con statistiche dell'indicizzazione
-    """
-    if not texts or len(texts) == 0:
-        print("[yellow]⚠ Nessun dato da indicizzare[/yellow]")
-        return {"success": False, "error": "Nessun dato fornito"}
-    
-    print(f"[cyan]📦 Indicizzazione {len(texts)} documenti da API...[/cyan]")
-    
-    # Ottieni il database corretto
-    if VECTOR_DB == "qdrant":
-        from rag.qdrant_db import qdrant_check_document_exists, qdrant_add_documents
-        
-        def check_exists(doc_id):
-            return qdrant_check_document_exists(doc_id)
-        
-        def add_documents(doc_ids, doc_texts, doc_metas):
-            qdrant_add_documents(doc_ids, doc_texts, doc_metas)
-        
-        db_collection = None
-    else:
-        db_collection = get_chroma()
-        
-        def check_exists(doc_id):
-            try:
-                existing = db_collection.get(ids=[doc_id])
-                return len(existing["ids"]) > 0
-            except:
-                return False
-        
-        def add_documents(doc_ids, doc_texts, doc_metas):
-            db_collection.add(ids=doc_ids, documents=doc_texts, metadatas=doc_metas)
-    
-    # Processa ogni documento
-    success_count = 0
-    skipped_count = 0
-    failed_count = 0
-    failed_items = []
-    
-    for idx, (doc_id, text, metadata) in enumerate(zip(ids, texts, metadatas)):
-        try:
-            # Controlla se esiste già
-            if check_exists(doc_id):
-                skipped_count += 1
-                if (idx + 1) % 10 == 0:
-                    print(f"[dim]  Progresso: {idx + 1}/{len(texts)} (saltati: {skipped_count})[/dim]")
-                continue
-            
-            # Gestione chunk se il testo è troppo lungo
-            if len(text) > MAX_EMBEDDING_CHARS:
-                # Dividi in chunk
-                chunk_size = MAX_EMBEDDING_CHARS
-                chunks = []
-                for i in range(0, len(text), chunk_size):
-                    chunks.append(text[i:i + chunk_size])
-                
-                chunk_ids = []
-                chunk_texts = []
-                chunk_metas = []
-                
-                for chunk_idx, chunk in enumerate(chunks):
-                    chunk_id = f"{doc_id}_chunk_{chunk_idx+1}"
-                    chunk_ids.append(chunk_id)
-                    chunk_texts.append(chunk)
-                    chunk_meta = metadata.copy()
-                    chunk_meta["chunk"] = chunk_idx + 1
-                    chunk_meta["total_chunks"] = len(chunks)
-                    chunk_metas.append(chunk_meta)
-                
-                # Aggiungi chunk
-                try:
-                    add_documents(chunk_ids, chunk_texts, chunk_metas)
-                    success_count += len(chunks)
-                except Exception as e:
-                    # Se fallisce il batch, prova uno alla volta
-                    for chunk_id, chunk_text, chunk_meta in zip(chunk_ids, chunk_texts, chunk_metas):
-                        try:
-                            add_documents([chunk_id], [chunk_text], [chunk_meta])
-                            success_count += 1
-                        except Exception as chunk_error:
-                            failed_count += 1
-                            failed_items.append({"id": chunk_id, "error": str(chunk_error)})
-            else:
-                # Documento normale: aggiungi direttamente
-                try:
-                    add_documents([doc_id], [text], [metadata])
-                    success_count += 1
-                except Exception as e:
-                    failed_count += 1
-                    failed_items.append({"id": doc_id, "error": str(e)})
-            
-            # Mostra progresso ogni 10 documenti (o ogni 50 per grandi batch)
-            progress_interval = 50 if len(texts) > 1000 else 10
-            if (idx + 1) % progress_interval == 0:
-                progress_pct = int(((idx + 1) / len(texts)) * 100) if len(texts) > 0 else 0
-                print(f"[cyan]  📊 Indicizzazione: {idx + 1}/{len(texts)} ({progress_pct}%) - Indicizzati: {success_count}, Saltati: {skipped_count}, Falliti: {failed_count}[/cyan]")
-        
-        except Exception as e:
-            failed_count += 1
-            failed_items.append({"id": doc_id, "error": str(e)})
-            print(f"[red]✗ Errore indicizzazione {doc_id}: {e}[/red]")
-    
-    # Statistiche finali
-    print(f"\n[bold green]✔ Indicizzazione API completata![/bold green]")
-    print(f"[green]  ✓ Indicizzati: {success_count} documenti[/green]")
-    if skipped_count > 0:
-        print(f"[yellow]  ⏭ Saltati: {skipped_count} documenti (già indicizzati)[/yellow]")
-    if failed_count > 0:
-        print(f"[red]  ✗ Falliti: {failed_count} documenti[/red]")
-        if len(failed_items) <= 5:
-            for item in failed_items:
-                print(f"[dim]    - {item['id']}: {item['error'][:50]}[/dim]")
-    
-    return {
-        "success": True,
-        "total": len(texts),
-        "indexed": success_count,
-        "skipped": skipped_count,
-        "failed": failed_count,
-        "failed_items": failed_items
-    }
 
 
 # ============================================================

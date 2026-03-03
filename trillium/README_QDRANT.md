@@ -1,4 +1,6 @@
-# Setup Qdrant
+# Setup Qdrant — Trillium V2
+
+> **Nota:** La stessa istanza Qdrant (collezione `trilliumdoc`) è condivisa tra TrilliumVersione1 e TrilliumVersione2. Le informazioni di base indicizzate sono identiche.
 
 ## Installazione
 

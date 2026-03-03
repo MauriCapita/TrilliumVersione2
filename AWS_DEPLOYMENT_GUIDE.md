@@ -1,11 +1,12 @@
-# 🚀 Guida Deployment AWS - Soluzione Cost-Effective
+# 🚀 Guida Deployment AWS — Trillium V2 (AI Weight Estimation)
+
+> **Nota:** Questa guida è specifica per il deployment di TrilliumVersione2 (stima pesi componenti pompe). Il database vettoriale Qdrant è condiviso con TrilliumVersione1.
 
 ## 📊 Architettura Attuale
 
-- **Flask App** (PrestaShop Dashboard) - Porta 8080
-- **Streamlit App** (Trillium RAG) - Porta 8501
-- **Qdrant/ChromaDB** (Vector Database)
-- **Storage** per documenti e database vettoriale
+- **Streamlit App** (Trillium V2 — AI Weight Estimation) - Porta 8501
+- **Qdrant** (Vector Database — condiviso con V1, collezione `trilliumdoc`)
+- **Storage** per disegni tecnici pompe e database vettoriale
 
 ---
 
@@ -18,7 +19,6 @@
 #### Architettura
 ```
 Lightsail Instance (2GB RAM, 1 vCPU, 60GB SSD)
-├── Flask App (porta 8080)
 ├── Streamlit App (porta 8501)
 ├── Qdrant (Docker) o ChromaDB
 └── Storage locale per documenti
@@ -56,8 +56,7 @@ Lightsail Instance (2GB RAM, 1 vCPU, 60GB SSD)
 
 4. **Configura reverse proxy** (Nginx):
    ```nginx
-   # Flask Dashboard
-   server {
+      server {
        listen 80;
        server_name dashboard.yourdomain.com;
        location / {
@@ -80,9 +79,7 @@ Lightsail Instance (2GB RAM, 1 vCPU, 60GB SSD)
    # Qdrant (se usato)
    docker-compose up -d
    
-   # Flask + Streamlit (con systemd o screen)
-   screen -S flask python app.py
-   screen -S streamlit cd trillium && streamlit run streamlit_app.py
+      screen -S streamlit cd trillium && streamlit run streamlit_app.py
    ```
 
 #### Costo Mensile Stimato
@@ -99,7 +96,6 @@ Lightsail Instance (2GB RAM, 1 vCPU, 60GB SSD)
 #### Architettura
 ```
 EC2 t3.micro (1 vCPU, 1GB RAM)
-├── Flask App
 ├── Streamlit App
 ├── Qdrant/ChromaDB
 └── EBS Volume (20GB) per storage
@@ -128,7 +124,6 @@ EC2 t3.micro (1 vCPU, 1GB RAM)
 #### Architettura
 ```
 App Runner (Container-based)
-├── Container Flask
 ├── Container Streamlit
 └── RDS/ElastiCache per Qdrant (opzionale)
 ```
@@ -156,7 +151,6 @@ App Runner (Container-based)
 #### Architettura
 ```
 ECS Fargate Spot
-├── Task Flask (0.5 vCPU, 1GB RAM)
 ├── Task Streamlit (0.5 vCPU, 1GB RAM)
 └── Task Qdrant (0.5 vCPU, 1GB RAM)
 ```
@@ -222,7 +216,7 @@ ECS Fargate Spot
 ### 4. Deploy Applicazione
 - [ ] Avvia Qdrant (se usato) con Docker
 - [ ] Configura Nginx come reverse proxy
-- [ ] Crea servizi systemd per Flask e Streamlit
+- [ ] Crea servizio systemd per Streamlit
 - [ ] Configura SSL con Let's Encrypt
 
 ### 5. Backup e Monitoraggio
@@ -269,10 +263,8 @@ cp .env.example .env
 # 7. Avvia Qdrant (se usato)
 docker-compose up -d
 
-# 8. Crea servizi systemd
-sudo tee /etc/systemd/system/flask-app.service > /dev/null <<EOF
-[Unit]
-Description=Flask PrestaShop Dashboard
+# 8. Crea servizi systemd[Unit]
+Description=Trillium RAG System
 After=network.target
 
 [Service]
@@ -304,8 +296,8 @@ EOF
 
 # 9. Avvia servizi
 sudo systemctl daemon-reload
-sudo systemctl enable flask-app streamlit-app
-sudo systemctl start flask-app streamlit-app
+sudo systemctl enable streamlit-app
+sudo systemctl start streamlit-app
 
 # 10. Configura Nginx
 sudo tee /etc/nginx/sites-available/app > /dev/null <<EOF
@@ -313,8 +305,7 @@ server {
     listen 80;
     server_name _;
 
-    # Flask Dashboard
-    location / {
+        location / {
         proxy_pass http://localhost:8080;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;

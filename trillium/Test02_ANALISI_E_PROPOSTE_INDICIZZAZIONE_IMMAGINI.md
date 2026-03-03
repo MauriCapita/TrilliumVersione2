@@ -1,10 +1,12 @@
 # Analisi cartella Test02 e proposte per rafforzare l’indicizzazione immagini
 
+> **Contesto TrilliumVersione2:** I disegni tecnici TIF in Test02 sono componenti di pompe centrifughe, e costituiscono parte della base dati per la **stima AI dei pesi dei componenti**. Una corretta indicizzazione di questi disegni è fondamentale per il recupero di pompe di riferimento simili durante il processo di weight estimation.
+
 ## 1. Analisi cartella Test02
 
 - **Contenuto:** ~119 file `.tif` in `Test02/OneDrive_1_10-02-2026/` (sottocartelle tipo "OH2 database").
 - **Dimensione totale:** ~54 MB.
-- **Tipo di file:** disegni tecnici (nomi tipo `230A74P10-REV00-A3.tif`, `502A79F20-REV00-A3.tif`).
+- **Tipo di file:** disegni tecnici di componenti pompe (nomi tipo `230A74P10-REV00-A3.tif`, `502A79F20-REV00-A3.tif`).
 - **Formato TIF:** TIFF bi-level (bianco/nero), compressione Group 4 (CCITT), `PhotometricInterpretation=WhiteIsZero`; alcune pagine con `height=0, width=0` (possibile multi‑pagina o IFD particolare); altre con risoluzione alta (es. 4960×3507 px).
 - **Estensioni supportate oggi in pipeline:** `.tif`, `.tiff` → OCR locale (Tesseract) e, se testo insufficiente, Vision (Google, Claude, Gemini via OpenRouter). Limite file 25 MB per le API.
 

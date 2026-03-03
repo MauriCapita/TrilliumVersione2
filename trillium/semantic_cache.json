@@ -1,0 +1,337 @@
+{
+  "entries": {
+    "a6e956d6f1276c05": {
+      "query": "dimmi cosa è una bilancia",
+      "answer": "**Definizione e Dettagli Tecnici di una Bilancia**\n\n### 1. Spiegazione Riassuntiva\nUna bilancia, nel contesto delle pompe centrifughe e dei rotori, si riferisce a un dispositivo o a un sistema utilizzato per determinare e correggere lo sbilanciamento di componenti rotanti come giranti, tamburi e alberi. Il bilanciamento è un processo critico per garantire che i componenti rotanti operino in modo fluido e senza vibrazioni eccessive, che potrebbero portare a guasti meccanici o inefficienze operative. Secondo le specifiche API, i componenti principali delle pompe devono essere bilanciati dinamicamente, utilizzando due piani di correzione, per raggiungere il grado G2.5 di ISO 21940-11 [DOC-2].\n\n### 2. Dettagli Tecnici / Formule / Procedura\n- **Bilanciamento Dinamico**: I componenti rotanti come le giranti e i tamburi devono essere bilanciati dinamicamente. Questo significa che il bilanciamento viene effettuato considerando due piani di correzione, il che permette di ridurre al minimo lo sbilanciamento residuo [DOC-2].\n- **Unbalance (Sbilanciamento)**: Lo sbilanciamento può essere caratterizzato come una massa \\( M_i \\) con una distanza \\( e_i \\) dall'asse di rotazione. La formula per calcolare lo sbilanciamento è \\( U_i = M_i \\times e_i \\) [DOC-1].\n- **Forza Generata dallo Sbilanciamento**: La forza radiale generata dallo sbilanciamento residuo di un assemblaggio rotante è calcolata come \\( F = U \\times \\text{RPM}^2 \\times 10^{-6} \\) (forza in libbre-forza) [DOC-3].\n\n### 3. Collegamento SOP → Mod con Spiegazione\nNel contesto del bilanciamento dei tamburi, la procedura dettagliata è descritta in [SOP-548], che utilizza il modulo di calcolo [Mod.531] per eseguire i calcoli necessari. Questo modulo guida l'utente attraverso il calcolo della distribuzione della pressione e delle forze assiali che agiscono sul tamburo di bilanciamento, utilizzando formule specifiche per determinare il fattore di rotazione e la pressione a monte e a valle del tamburo [DOC-7].\n\n### 4. Riferimenti Documenti\n- **DOC-1**: /Users/mauriziocapitanio/Documents/Alveo/Sviluppo copia/TrilliumVersione1/Technical Documentation Project/Internal Documents/RDE/G.10.00.41 Rev.0 - ENG_955749.pdf\n- **DOC-2**: /Users/mauriziocapitanio/Documents/Alveo/Sviluppo copia/TrilliumVersione1/Technical Documentation Project/Internal Documents/RDE/G.10.00.41 Rev.0 - ENG_955749.pdf\n- **DOC-3**: /Users/mauriziocapitanio/Documents/Alveo/Sviluppo copia/TrilliumVersione1/Technical Documentation Project/External Documents/International standard/API RP 684 II ed - 2010.pdf\n- **DOC-7**: /Users/mauriziocapitanio/Documents/Alveo/Sviluppo copia/TrilliumVersione1/Technical Documentation Project/Internal Documents/RDE/SOP-548 Rev.0 - ENG - Balance drum design_956096.pdf\n\nQuesta risposta è stata sviluppata utilizzando esclusivamente le informazioni disponibili nei documenti indicizzati. Se ulteriori dettagli o specifiche sono necessari, si prega di fare riferimento ai documenti originali per una comprensione completa.",
+      "docs": [
+        {
+          "source": "/Users/mauriziocapitanio/Documents/Alveo/Sviluppo copia/TrilliumVersione1/Technical Documentation Project/Internal Documents/RDE/G.10.00.41 Rev.0 - ENG_955749.pdf",
+          "text": "Impellers, drums, and shafts (API610 §6.9.3.1)...........................................................12\n\nISO 21940.11: rigid rotors. ..............................................................."
+        },
+        {
+          "source": "/Users/mauriziocapitanio/Documents/Alveo/Sviluppo copia/TrilliumVersione1/Technical Documentation Project/Internal Documents/RDE/G.10.00.41 Rev.0 - ENG_955749.pdf",
+          "text": "Special flexible rotors: rotors that could fall into class 1,2, \nor 3 but have in addition one or more components that are \nthemselves flexible or are flexible attached\n\nImpellers, drums, and shafts ("
+        },
+        {
+          "source": "/Users/mauriziocapitanio/Documents/Alveo/Sviluppo copia/TrilliumVersione1/Technical Documentation Project/External Documents/International standard/API RP 684 II ed - 2010.pdf",
+          "text": "CYC> \nၑ ၑ \n- ro \n, ro \nro \n- \nro ၑ \ne \nr ၑ \nr ro \nn \n- \no \nၑၑ \nro n \n[ \n(5-2) \n(5-3)\n\nF = Ux l0-6( RPM!ၑr \nradiai force generated due to the residuai unbal- \nance of the rotating assembly (lbf),\n\n5.2."
+        },
+        {
+          "source": "/Users/mauriziocapitanio/Documents/Alveo/Sviluppo copia/TrilliumVersione1/Technical Documentation Project/External Documents/International standard/API RP 684 II ed - 2010.pdf",
+          "text": "Check Balance per 5.4.8. To conduct this test, the final unbal- \nance readings from a low speed balancing machine should be \nrecorded along with an identified phase reference and then \ncompared to the"
+        },
+        {
+          "source": "/Users/mauriziocapitanio/Documents/Alveo/Sviluppo copia/TrilliumVersione1/Technical Documentation Project/External Documents/International standard/API RP 684 II ed - 2010.pdf",
+          "text": "N \no o \nၑN \n- ၑ \nrr, \ne o \n- w \nro \na.ၑ \no \nrr\" \n<C \n.... - \nrn n \nn ro \nၑ a \nၑ - \n, rn \nro \n- \nrn - \ne \nrၑ \nr ro \nn \n. \no \na\n\nFigure 5-6). The unbalances presented in Figure 5-6 are iden- \ntified by "
+        },
+        {
+          "source": "/Users/mauriziocapitanio/Documents/Alveo/Sviluppo copia/TrilliumVersione1/Technical Documentation Project/Internal Documents/RDE/G.10.00.41 Rev.0 - ENG_955749.pdf",
+          "text": "Mod.001-9\n\ndry critical speed (API610 §3.1.14), that is the rotor critical speed assuming:\no\nno liquid effects;\no\nrotor supported only at its bearing;\no\nbearings with infinite stiffness; \n\nwet criti"
+        },
+        {
+          "source": "/Users/mauriziocapitanio/Documents/Alveo/Sviluppo copia/TrilliumVersione1/Technical Documentation Project/Internal Documents/RDE/SOP-548 Rev.0 - ENG - Balance drum design_956096.pdf",
+          "text": "For this reason, in this case the asymptotic kZ=0.5 is used.\n\nMod.120-7\n\nk [-] is the rotation factor of fluid in impeller sidewall gap.\n\nIn case that |φsp Reu0.2| ≤ 0.002, the rotation factor k is a"
+        },
+        {
+          "source": "/Users/mauriziocapitanio/Documents/Alveo/Sviluppo copia/TrilliumVersione1/Technical Documentation Project/External Documents/International standard/API RP 684 II ed - 2010.pdf",
+          "text": "Unbalance Versus Speed for API Limits and Balance Machine Limit \n(Calculated at w=l pound)\n\nThis document is intended to describe, discuss, and clarify \nthe API Standard Paragraphs (SP) Section 6.8 wh"
+        }
+      ],
+      "timestamp": 1772016898.504569
+    },
+    "b534c25ca2db4b67": {
+      "query": "Quali strumenti o software sono utilizzati per il bilanciamento e la documentazione in ambito tecnico?",
+      "answer": "**Strumenti e Software per il Bilanciamento e la Documentazione Tecnica**\n\n### 1. Spiegazione Riassuntiva\nIl bilanciamento dei componenti rotanti come giranti, tamburi e alberi è un processo critico nella progettazione e manutenzione delle pompe centrifughe. Questo processo richiede l'uso di macchine di bilanciamento e software specifici per garantire che i componenti siano equilibrati correttamente secondo gli standard internazionali come ISO 21940 e API 610. Tuttavia, i documenti indicizzati non forniscono dettagli specifici sugli strumenti o software utilizzati per il bilanciamento e la documentazione tecnica.\n\n### 2. Dettagli Tecnici e Procedure\n- **Bilanciamento Dinamico**: I componenti principali del rotore, come l'albero, il tamburo di bilanciamento e le giranti, devono essere bilanciati dinamicamente prima dell'assemblaggio, seguendo lo standard ISO 21940-11, grado G2.5 [DOC-3].\n- **Bilanciamento a Due Piani**: Questo metodo è utilizzato per bilanciare componenti con due piani di correzione, come indicato per le giranti e i rotori [DOC-4].\n- **Calcolo del Disequilibrio Residuo**: La formula per calcolare il disequilibrio residuo ammissibile è data da:\n  \\[\n  U_{per} = 9549 \\times G \\times \\frac{W}{N}\n  \\]\n  dove \\( G \\) è il grado di bilanciamento, \\( W \\) è la massa del rotore in kg, e \\( N \\) è la velocità operativa massima in rpm [DOC-4].\n\n### 3. Collegamento SOP e Moduli\nNon ci sono riferimenti diretti a SOP o moduli di calcolo Excel specifici per il bilanciamento nei documenti indicizzati. Pertanto, non è possibile fornire un flusso di lavoro dettagliato che includa SOP e moduli di calcolo.\n\n### 4. Informazioni Mancanti\nNon sono presenti nei documenti indicizzati dettagli specifici sugli strumenti o software utilizzati per il bilanciamento e la documentazione tecnica.\n\n## Riferimenti Documenti\n- **DOC-1**: /Users/mauriziocapitanio/Documents/Alveo/Sviluppo copia/TrilliumVersione1/Technical Documentation Project/Internal Documents/RDE/G.10.00.41 Rev.0 - ENG_955749.pdf\n- **DOC-2**: /Users/mauriziocapitanio/Documents/Alveo/Sviluppo copia/TrilliumVersione1/Technical Documentation Project/External Documents/International standard/API RP 684 II ed - 2010.pdf\n- **DOC-3**: /Users/mauriziocapitanio/Documents/Alveo/Sviluppo copia/TrilliumVersione1/Technical Documentation Project/Internal Documents/RDE/G.10.00.41 Rev.0 - ENG_955749.pdf\n- **DOC-4**: /Users/mauriziocapitanio/Documents/Alveo/Sviluppo copia/TrilliumVersione1/Technical Documentation Project/Internal Documents/RDE/G.10.00.41 Rev.0 - ENG_955749.pdf\n\nSe hai bisogno di ulteriori dettagli o di una guida specifica su un altro argomento, non esitare a chiedere!",
+      "docs": [
+        {
+          "source": "/Users/mauriziocapitanio/Documents/Alveo/Sviluppo copia/TrilliumVersione1/Technical Documentation Project/Internal Documents/RDE/G.10.00.41 Rev.0 - ENG_955749.pdf",
+          "text": "Impellers, drums, and shafts (API610 §6.9.3.1)...........................................................12\n\nISO 21940.11: rigid rotors. ..............................................................."
+        },
+        {
+          "source": "/Users/mauriziocapitanio/Documents/Alveo/Sviluppo copia/TrilliumVersione1/Technical Documentation Project/External Documents/International standard/API RP 684 II ed - 2010.pdf",
+          "text": "Check Balance per 5.4.8. To conduct this test, the final unbal- \nance readings from a low speed balancing machine should be \nrecorded along with an identified phase reference and then \ncompared to the"
+        },
+        {
+          "source": "/Users/mauriziocapitanio/Documents/Alveo/Sviluppo copia/TrilliumVersione1/Technical Documentation Project/Internal Documents/RDE/G.10.00.41 Rev.0 - ENG_955749.pdf",
+          "text": "Special flexible rotors: rotors that could fall into class 1,2, \nor 3 but have in addition one or more components that are \nthemselves flexible or are flexible attached\n\nImpellers, drums, and shafts ("
+        },
+        {
+          "source": "/Users/mauriziocapitanio/Documents/Alveo/Sviluppo copia/TrilliumVersione1/Technical Documentation Project/Internal Documents/RDE/G.10.00.41 Rev.0 - ENG_955749.pdf",
+          "text": "0.67\n𝑈𝑝𝑒𝑟= 9549 × 𝐺×  \n𝑊\n𝑁\n𝑈𝑝𝑒𝑟= 6350 ×\n𝑊\n𝑁\n\n1.0\n𝑈𝑝𝑒𝑟= 9549 × 𝐺×  \n𝑊\n𝑁\n𝑈𝑝𝑒𝑟= 1.5 × 6350 ×\n𝑊\n𝑁\n\n2.5\n𝑈𝑝𝑒𝑟= 9549 × 𝐺×  \n𝑊\n𝑁\n𝑈𝑝𝑒𝑟= 4 × 6350 ×\n𝑊\n𝑁\n\nOutboard rotor with centre of mass in an \noverhung positi"
+        },
+        {
+          "source": "/Users/mauriziocapitanio/Documents/Alveo/Sviluppo copia/TrilliumVersione1/Technical Documentation Project/Internal Documents/RDE/SOP-463 Rev.1 - ENG - Criteria for choosing shrink fitclearance fit for impeller-shaft assembly_996397.pdf",
+          "text": "Standard Operation Procedure\n\nCriteria for choosing shrink fit/clearance fit for impeller-shaft assembly\n\nCompiled Product Design/T.Puccetti\n\nVerified Client Qualification/ EHSS - A. Banfi/ T. Morelli"
+        },
+        {
+          "source": "/Users/mauriziocapitanio/Documents/Alveo/Sviluppo copia/TrilliumVersione1/Technical Documentation Project/Internal Documents/RDE/SOP-554 Rev.0 - ENG - Level 2 Shaft deflection analysis (static structural FEA) - OH or BB pumps_966868.pdf",
+          "text": "Mod.120-7\nthat international standards like API 610 or ANSI HI 9.6.3 make stiffness verification \nmandatory through either analytical methods or physical testing to ensur\n\nAnnex B: Test case P30694.00"
+        },
+        {
+          "source": "/Users/mauriziocapitanio/Documents/Alveo/Sviluppo copia/TrilliumVersione1/Technical Documentation Project/Internal Documents/RDE/G.05.02.16 Rev.2 - ENG_789273.pdf",
+          "text": "Pf and motor efficiency can be read from motor performance curve as a function of motor \nslip “𝑆%”. The value of slip “𝑆%” shall be calculated to read power factor and motor efficiency \nwith the follo"
+        },
+        {
+          "source": "/Users/mauriziocapitanio/Documents/Alveo/Sviluppo copia/TrilliumVersione1/Technical Documentation Project/External Documents/Literature/TMP Handbook.pdf",
+          "text": "1.4460\nformation water for\ninjection pH ≥5,0\nboiler feed (O2 free)\n\nTable L.5.2 Recommendations for materials for different pump parts\n\n2.1050.01\nsea water without H2S\n\n0.7040\nsalt water\n(small amount"
+        }
+      ],
+      "timestamp": 1772016936.364946
+    },
+    "364fc0404722fb09": {
+      "query": "Quali sono le linee guida per il meshing dell'impeller per analisi CFD?",
+      "answer": "## Linee Guida per il Meshing dell'Impeller per Analisi CFD\n\n### 1. Spiegazione Riassuntiva\nLe linee guida per il meshing di un impeller per analisi CFD sono dettagliate nel documento SOP-490. Questo documento fornisce istruzioni generali per progettare una griglia computazionale dei canali alettati partendo da un modello CAD, che verrà utilizzato per l'analisi CFD. Le tipologie di input disponibili includono profili alari e curve meridionali delle pale, modelli 3D della singola pala dell'impeller e modelli 3D dell'impeller completo [SOP-490].\n\n### 2. Dettagli Tecnici e Procedure\n\n#### 2.1 Tipologia di Mesh\n- **Mesh Strutturata**: Consiste in un'organizzazione di elementi esaedrici. È preferibile per simulare lo strato limite [SOP-490 § 3].\n- **Mesh Non Strutturata**: Include agglomerati di elementi tetraedrici e prismatici, spesso utilizzati per geometrie complesse [SOP-490 § 3].\n\n#### 2.2 Criteri di Accettazione\n- La mesh deve rispettare criteri di ortogonalità e fattore di espansione. L'ortogonalità è definita come la deviazione angolare tra il vettore normale alla diagonale e il vettore che collega i centri delle celle [SOP-490 § 4].\n- Il rapporto di espansione della mesh è il rapporto tra il volume del settore più grande e quello più piccolo [SOP-490 § 4].\n\n#### 2.3 Qualità della Mesh\n- **Skewness**: La skewness dovrebbe avere una qualità almeno buona o migliore [SOP-490 § 5].\n- **Rapporto d'aspetto**: Non deve superare il fattore 10 vicino alle pareti e 5 nelle regioni di flusso principale [SOP-490 § 5].\n- **Volume Minimo**: Deve essere maggiore o uguale a zero per evitare volumi negativi [SOP-490 § 12].\n\n#### 2.4 Refinement\n- È necessario un raffinamento adeguato nelle regioni di incidenza del flusso sulla pala, con 8-20 elementi disposti sul bordo d'attacco (LE) e sul bordo d'uscita (TE) per seguire bene la loro curvatura [SOP-490 § 11].\n\n### 3. Collegamento SOP → Mod\nNon ci sono riferimenti specifici a moduli di calcolo Excel nei documenti indicizzati per questa SOP.\n\n## Riferimenti Documenti\n- SOP-490 Rev.1 - Guidelines for Meshing Impeller for CFD Analysis: /Users/mauriziocapitanio/Documents/Alveo/Sviluppo copia/TrilliumVersione1/Technical Documentation Project/Internal Documents/R&D/SOP-490 Rev.1 - ENG - Guidelines for Meshing Impeller for CFD Analysis_928905.pdf\n\nQuesta risposta è stata costruita rigorosamente sulla base dei documenti forniti e non include informazioni al di fuori di essi. Se necessiti di ulteriori dettagli o chiarimenti, ti invitiamo a consultare direttamente i documenti indicizzati.",
+      "docs": [
+        {
+          "source": "/Users/mauriziocapitanio/Documents/Alveo/Sviluppo copia/TrilliumVersione1/Technical Documentation Project/Internal Documents/R&D/SOP-490 Rev.1 - ENG - Guidelines for Meshing Impeller for CFD Analysis_928905.pdf",
+          "text": "Standard Operation Procedure \nSOP-490 \nGuidelines for Meshing Impeller for CFD Analysis \nCompiled Fluid Dynamics Engineer/E.Riccio \nRev.: 0 \nVerified  QA/HSEM-C.Delli Quadri/M.Tremolada \nDate: 05/11/2"
+        },
+        {
+          "source": "/Users/mauriziocapitanio/Documents/Alveo/Sviluppo copia/TrilliumVersione1/Technical Documentation Project/Internal Documents/R&D/SOP-490 Rev.1 - ENG - Guidelines for Meshing Impeller for CFD Analysis_928905.pdf",
+          "text": "Impeller for CFD Analysis \nCompiled Fluid Dynamics Engineer/E.Riccio \nRev.: 0 \nVerified  QA/HSEM-C.Delli Quadri/M.Tremolada \nDate: 05/11/2024\n\nApproved R&D Manager/M.Borghetti \nPage 3 of 29\n\nMod.120-7"
+        },
+        {
+          "source": "/Users/mauriziocapitanio/Documents/Alveo/Sviluppo copia/TrilliumVersione1/Technical Documentation Project/Internal Documents/R&D/SOP-490 Rev.1 - ENG - Guidelines for Meshing Impeller for CFD Analysis_928905.pdf",
+          "text": "t ratio of the elements should not exceed the factor 10 near walls \nand 5 in the bulk flow regions. It is particularly important to fulfill these requirements in zones with \nstrong velocity gradients."
+        },
+        {
+          "source": "/Users/mauriziocapitanio/Documents/Alveo/Sviluppo copia/TrilliumVersione1/Technical Documentation Project/Internal Documents/R&D/SOP-490 Rev.1 - ENG - Guidelines for Meshing Impeller for CFD Analysis_928905.pdf",
+          "text": "so that the results can be considered a valid approximation of the real \nphysical phenomenon the simulation must respect the three fundamental concepts of: consistency, \nstability and convergence [1]."
+        },
+        {
+          "source": "/Users/mauriziocapitanio/Documents/Alveo/Sviluppo copia/TrilliumVersione1/Technical Documentation Project/Internal Documents/R&D/SOP-490 Rev.1 - ENG - Guidelines for Meshing Impeller for CFD Analysis_928905.pdf",
+          "text": "-structured mesh.\n\n11. Correct periodicity \nTo avoid problems of stability and convergence of the calculation it is necessary that the \"3D \nmodel of the single impeller blade\" has correct periodicity."
+        },
+        {
+          "source": "/Users/mauriziocapitanio/Documents/Alveo/Sviluppo copia/TrilliumVersione1/Technical Documentation Project/Internal Documents/R&D/SOP-490 Rev.1 - ENG - Guidelines for Meshing Impeller for CFD Analysis_928905.pdf",
+          "text": "ndard Operation Procedure \nSOP-490 \nGuidelines for Meshing Impeller for CFD Analysis \nCompiled Fluid Dynamics Engineer/E.Riccio \nRev.: 0 \nVerified  QA/HSEM-C.Delli Quadri/M.Tremolada \nDate: 05/11/2024"
+        },
+        {
+          "source": "/Users/mauriziocapitanio/Documents/Alveo/Sviluppo copia/TrilliumVersione1/Technical Documentation Project/Internal Documents/R&D/SOP-490 Rev.1 - ENG - Guidelines for Meshing Impeller for CFD Analysis_928905.pdf",
+          "text": "in nature there is no guarantee that it is the \nactual solution. Moreover, this method is sensitive to distorted elements which can prevent \nconvergence if such elements are in critical flow regions.\n"
+        },
+        {
+          "source": "/Users/mauriziocapitanio/Documents/Alveo/Sviluppo copia/TrilliumVersione1/Technical Documentation Project/Internal Documents/R&D/SOP-490 Rev.1 - ENG - Guidelines for Meshing Impeller for CFD Analysis_928905.pdf",
+          "text": "Mod.120-7\n\n5. Acceptance criteria \nThis procedure is applicable for any geometry of impeller; indeed, it could be used for radial, semy-\naxial and axial impeller, closed, semi-open or open (Table 1).\n"
+        },
+        {
+          "source": "/Users/mauriziocapitanio/Documents/Alveo/Sviluppo copia/TrilliumVersione1/Technical Documentation Project/Internal Documents/R&D/SOP-504 Rev.1 - ENG - Guidelines for Meshing pump (Stage geometry) for CFD Analysis_928906.pdf",
+          "text": "Standard Operation Procedure \nSOP-504 \nGuidelines for Meshing Pump (stage geometry) for CFD Analysis \nCompiled Fluid Dynamics Engineer/E.Riccio \nRev.: 0 \nVerified QA/HSEM-C.Delli Quadri/M.Tremolada \nD"
+        },
+        {
+          "source": "/Users/mauriziocapitanio/Documents/Alveo/Sviluppo copia/TrilliumVersione1/Technical Documentation Project/Internal Documents/R&D/SOP-504 Rev.1 - ENG - Guidelines for Meshing pump (Stage geometry) for CFD Analysis_928906.pdf",
+          "text": "” \navailable, it is possible to create a Structured Mesh (for example using the ANSYS ICEM tool), while \nCOPY COMPLIANT to the original document resident on the computer system at the time of printing"
+        },
+        {
+          "source": "/Users/mauriziocapitanio/Documents/Alveo/Sviluppo copia/TrilliumVersione1/Technical Documentation Project/Internal Documents/R&D/SOP-490 Rev.1 - ENG - Guidelines for Meshing Impeller for CFD Analysis_928905.pdf",
+          "text": "the region of incidence of the flow on the blade, \ntherefore it must have an adequate degree of discretization, generally 8-20 elements arranged on \nthe LE are sufficient to follow its curvature well."
+        },
+        {
+          "source": "/Users/mauriziocapitanio/Documents/Alveo/Sviluppo copia/TrilliumVersione1/Technical Documentation Project/Internal Documents/R&D/SOP-490 Rev.1 - ENG - Guidelines for Meshing Impeller for CFD Analysis_928905.pdf",
+          "text": "ndard Operation Procedure \nSOP-490 \nGuidelines for Meshing Impeller for CFD Analysis \nCompiled Fluid Dynamics Engineer/E.Riccio \nRev.: 0 \nVerified  QA/HSEM-C.Delli Quadri/M.Tremolada \nDate: 05/11/2024"
+        },
+        {
+          "source": "/Users/mauriziocapitanio/Documents/Alveo/Sviluppo copia/TrilliumVersione1/Technical Documentation Project/Internal Documents/R&D/SOP-490 Rev.1 - ENG - Guidelines for Meshing Impeller for CFD Analysis_928905.pdf",
+          "text": "or Meshing Impeller for CFD Analysis \nCompiled Fluid Dynamics Engineer/E.Riccio \nRev.: 0 \nVerified  QA/HSEM-C.Delli Quadri/M.Tremolada \nDate: 05/11/2024\n\nApproved R&D Manager/M.Borghetti \nPage 5 of 29"
+        }
+      ],
+      "timestamp": 1772034998.0883331
+    },
+    "6ace85555022d7ce": {
+      "query": "spiega con parole semplice io che non so nulla cosa è il Meshing",
+      "answer": "## Spiegazione del Meshing\n\nIl meshing è il processo di suddivisione di un dominio geometrico in elementi più piccoli, chiamati celle o elementi mesh, che vengono utilizzati per risolvere numericamente le equazioni che descrivono i fenomeni fluidodinamici. Questo processo è fondamentale nelle analisi CFD (Computational Fluid Dynamics) perché la qualità e la tipologia della mesh influenzano direttamente l'accuratezza e la stabilità delle simulazioni. \n\n### 1. Tipologie di Mesh\n\n- **Mesh Strutturata**: Consiste in un'organizzazione regolare di elementi, tipicamente esagonali, che seguono una griglia ordinata. Questa tipologia è spesso utilizzata quando la geometria è semplice e regolare [DOC-2].\n  \n- **Mesh Non Strutturata**: Consiste in un insieme di elementi disposti in modo non regolare, spesso utilizzando tetraedri e prismi. È preferita per geometrie complesse e irregolari [DOC-2].\n\n### 2. Elementi della Mesh\n\nGli elementi della mesh possono essere di diversi tipi, e la scelta dipende dal fenomeno fluidodinamico che si desidera modellare e dal livello di accuratezza richiesto. Gli elementi prismatici sono raccomandati per simulare lo strato limite, ma non sempre utilizzabili a causa delle forme irregolari delle geometrie [DOC-2].\n\n### 3. Processo di Creazione della Mesh\n\n- **Preparazione CAD**: Prima di iniziare la fase di meshing, è necessario preparare il modello CAD attraverso l'assemblaggio, l'estrazione dei domini fluidi e la divisione dei diversi domini fluidi [DOC-13].\n\n- **Generazione della Mesh**: Utilizzando strumenti come ANSYS ICEM o ANSYS MESHING, si possono creare mesh strutturate o ibride non strutturate a seconda della complessità della geometria [DOC-13].\n\n### 4. Importanza della Qualità della Mesh\n\nLa qualità della mesh è cruciale per ottenere risultati affidabili dalle simulazioni CFD. La mesh deve rispettare i concetti di consistenza, stabilità e convergenza per garantire che i risultati siano una valida approssimazione del fenomeno fisico reale [DOC-7].\n\n### 5. Numero di Elementi e Tempo di Simulazione\n\nIl numero finale di elementi della mesh varia a seconda del livello di dettaglio desiderato. È importante affinare la mesh nelle zone con alti gradienti di velocità, come vicino ai bordi di attacco e di uscita delle pale e vicino alle pareti [DOC-5].\n\n## Riferimenti documenti\n\n- SOP-504 Rev.1 - Guidelines for Meshing Pump (Stage geometry) for CFD Analysis: /Users/mauriziocapitanio/Documents/Alveo/Sviluppo copia/TrilliumVersione1/Technical Documentation Project/Internal Documents/R&D/SOP-504 Rev.1 - ENG - Guidelines for Meshing pump (Stage geometry) for CFD Analysis_928906.pdf\n- SOP-490 Rev.1 - Guidelines for Meshing Impeller for CFD Analysis: /Users/mauriziocapitanio/Documents/Alveo/Sviluppo copia/TrilliumVersione1/Technical Documentation Project/Internal Documents/R&D/SOP-490 Rev.1 - ENG - Guidelines for Meshing Impeller for CFD Analysis_928905.pdf",
+      "docs": [
+        {
+          "source": "/Users/mauriziocapitanio/Documents/Alveo/Sviluppo copia/TrilliumVersione1/Technical Documentation Project/Internal Documents/R&D/SOP-504 Rev.1 - ENG - Guidelines for Meshing pump (Stage geometry) for CFD Analysis_928906.pdf",
+          "text": "o adequately capture fluid-dynamic phenomena minimizing the number of \nelements of the computational grid.\n\nA specific example using MESHING and ICEM of ANSYS environment is described in the \nAnnexes."
+        },
+        {
+          "source": "/Users/mauriziocapitanio/Documents/Alveo/Sviluppo copia/TrilliumVersione1/Technical Documentation Project/Internal Documents/R&D/SOP-490 Rev.1 - ENG - Guidelines for Meshing Impeller for CFD Analysis_928905.pdf",
+          "text": "or Meshing Impeller for CFD Analysis \nCompiled Fluid Dynamics Engineer/E.Riccio \nRev.: 0 \nVerified  QA/HSEM-C.Delli Quadri/M.Tremolada \nDate: 05/11/2024\n\nApproved R&D Manager/M.Borghetti \nPage 5 of 29"
+        },
+        {
+          "source": "/Users/mauriziocapitanio/Documents/Alveo/Sviluppo copia/TrilliumVersione1/Technical Documentation Project/Internal Documents/R&D/SOP-504 Rev.1 - ENG - Guidelines for Meshing pump (Stage geometry) for CFD Analysis_928906.pdf",
+          "text": "ump (stage geometry) for CFD Analysis \nCompiled Fluid Dynamics Engineer/E.Riccio \nRev.: 0 \nVerified QA/HSEM-C.Delli Quadri/M.Tremolada \nDate: 05/11/2024\n\nApproved R&D Manager/M.Borghetti \nPage 4 of 40"
+        },
+        {
+          "source": "/Users/mauriziocapitanio/Documents/Alveo/Sviluppo copia/TrilliumVersione1/Technical Documentation Project/Internal Documents/R&D/SOP-504 Rev.1 - ENG - Guidelines for Meshing pump (Stage geometry) for CFD Analysis_928906.pdf",
+          "text": "resented below, with the aim to provide the user with the necessary \ninformation and recommended criteria for meshing the pump using general purpose tools.\n\n1. Numerical Discretization techniques: FVM"
+        },
+        {
+          "source": "/Users/mauriziocapitanio/Documents/Alveo/Sviluppo copia/TrilliumVersione1/Technical Documentation Project/Internal Documents/R&D/SOP-504 Rev.1 - ENG - Guidelines for Meshing pump (Stage geometry) for CFD Analysis_928906.pdf",
+          "text": "” \navailable, it is possible to create a Structured Mesh (for example using the ANSYS ICEM tool), while \nCOPY COMPLIANT to the original document resident on the computer system at the time of printing"
+        },
+        {
+          "source": "/Users/mauriziocapitanio/Documents/Alveo/Sviluppo copia/TrilliumVersione1/Technical Documentation Project/Internal Documents/R&D/SOP-504 Rev.1 - ENG - Guidelines for Meshing pump (Stage geometry) for CFD Analysis_928906.pdf",
+          "text": "e following three phases: \n- \nassembly \n- \nextraction of fluid domains \n- \ndivision of different fluid domains: the position of the mesh interfaces is identified (also with \nthe help of a 2D drawing)."
+        },
+        {
+          "source": "/Users/mauriziocapitanio/Documents/Alveo/Sviluppo copia/TrilliumVersione1/Technical Documentation Project/Internal Documents/R&D/SOP-504 Rev.1 - ENG - Guidelines for Meshing pump (Stage geometry) for CFD Analysis_928906.pdf",
+          "text": "ion Procedure \nSOP-504 \nGuidelines for Meshing Pump (stage geometry) for CFD Analysis \nCompiled Fluid Dynamics Engineer/E.Riccio \nRev.: 0 \nVerified QA/HSEM-C.Delli Quadri/M.Tremolada \nDate: 05/11/2024"
+        },
+        {
+          "source": "/Users/mauriziocapitanio/Documents/Alveo/Sviluppo copia/TrilliumVersione1/Technical Documentation Project/Internal Documents/R&D/SOP-504 Rev.1 - ENG - Guidelines for Meshing pump (Stage geometry) for CFD Analysis_928906.pdf",
+          "text": "Standard Operation Procedure \nSOP-504 \nGuidelines for Meshing Pump (stage geometry) for CFD Analysis \nCompiled Fluid Dynamics Engineer/E.Riccio \nRev.: 0 \nVerified QA/HSEM-C.Delli Quadri/M.Tremolada \nD"
+        },
+        {
+          "source": "/Users/mauriziocapitanio/Documents/Alveo/Sviluppo copia/TrilliumVersione1/Technical Documentation Project/Internal Documents/R&D/SOP-504 Rev.1 - ENG - Guidelines for Meshing pump (Stage geometry) for CFD Analysis_928906.pdf",
+          "text": "n nature there is no guarantee that it is the actual \nsolution.  \nMoreover, this method is sensitive to distorted elements which can prevent convergence if such \nelements are in critical flow regions."
+        },
+        {
+          "source": "/Users/mauriziocapitanio/Documents/Alveo/Sviluppo copia/TrilliumVersione1/Technical Documentation Project/Internal Documents/R&D/SOP-490 Rev.1 - ENG - Guidelines for Meshing Impeller for CFD Analysis_928905.pdf",
+          "text": "or Meshing Impeller for CFD Analysis \nCompiled Fluid Dynamics Engineer/E.Riccio \nRev.: 0 \nVerified  QA/HSEM-C.Delli Quadri/M.Tremolada \nDate: 05/11/2024\n\nApproved R&D Manager/M.Borghetti \nPage 6 of 29"
+        },
+        {
+          "source": "/Users/mauriziocapitanio/Documents/Alveo/Sviluppo copia/TrilliumVersione1/Technical Documentation Project/Internal Documents/R&D/SOP-490 Rev.1 - ENG - Guidelines for Meshing Impeller for CFD Analysis_928905.pdf",
+          "text": "in nature there is no guarantee that it is the \nactual solution. Moreover, this method is sensitive to distorted elements which can prevent \nconvergence if such elements are in critical flow regions.\n"
+        },
+        {
+          "source": "/Users/mauriziocapitanio/Documents/Alveo/Sviluppo copia/TrilliumVersione1/Technical Documentation Project/Internal Documents/R&D/SOP-504 Rev.1 - ENG - Guidelines for Meshing pump (Stage geometry) for CFD Analysis_928906.pdf",
+          "text": "EM-C.Delli Quadri/M.Tremolada \nDate: 05/11/2024\n\nApproved R&D Manager/M.Borghetti \nPage 5 of 40\n\nMod.120-7\n\nFigure 1 : FVM, method Cell-Centred and method Vertex-Centred\n\n2. Element types of cell mesh"
+        },
+        {
+          "source": "/Users/mauriziocapitanio/Documents/Alveo/Sviluppo copia/TrilliumVersione1/Technical Documentation Project/Internal Documents/R&D/SOP-504 Rev.1 - ENG - Guidelines for Meshing pump (Stage geometry) for CFD Analysis_928906.pdf",
+          "text": "mp (stage geometry) for CFD Analysis \nCompiled Fluid Dynamics Engineer/E.Riccio \nRev.: 0 \nVerified QA/HSEM-C.Delli Quadri/M.Tremolada \nDate: 05/11/2024\n\nApproved R&D Manager/M.Borghetti \nPage 21 of 40"
+        }
+      ],
+      "timestamp": 1772035061.956026
+    },
+    "2772d7964682244b": {
+      "query": "Quali sono i principali parametri da considerare quando si crea una griglia per l'analisi CFD dell'impeller?",
+      "answer": "## Principali Parametri per la Creazione di una Griglia per l'Analisi CFD dell'Impeller\n\n### 1. Spiegazione Riassuntiva\nLa creazione di una griglia per l'analisi CFD di un impeller richiede attenzione a diversi parametri chiave per garantire la qualità e l'affidabilità dei risultati. Questi parametri includono la tipologia di mesh, la qualità della mesh, la periodicità corretta, e il numero di elementi della griglia. Ogni parametro è cruciale per assicurare che la simulazione CFD sia accurata e converga correttamente [SOP-490].\n\n### 2. Dettagli Tecnici e Formule\n\n#### Tipologia di Mesh\n- **Mesh Strutturata e Non Strutturata**: La mesh può essere strutturata, utilizzando un'organizzazione di elementi esagonali, o non strutturata, spesso ibrida con tetraedri e prismi [SOP-490].\n- **Mesh \"C\" e \"O\"**: Per le macchine idrauliche, le topologie di mesh \"C\" e \"O\" sono particolarmente adatte. La mesh \"C\" è preferibile in situazioni con spazi ridotti tra il bordo di uscita (TE) e l'interfaccia, per evitare distorsioni [SOP-490].\n\n#### Qualità della Mesh\n- **Ortogonalità della Mesh**: Gli elementi devono avere angoli tra 20° e 160° per evitare problemi di precisione e convergenza [SOP-490].\n- **Fattore di Espansione della Mesh**: La dimensione degli elementi non deve cambiare bruscamente. Il tasso di espansione non deve superare 1.1 vicino alle pareti e 1.5-2 nel flusso principale [SOP-490].\n- **Rapporto d'Aspetto della Mesh**: Il rapporto d'aspetto degli elementi non deve superare 10 vicino alle pareti e 5 nelle regioni di flusso principale [SOP-490].\n\n#### Periodicità Corretta\n- La periodicità del modello 3D della singola pala deve essere verificata creando il modello completo dell'impeller tramite duplicazione e rotazione del dominio singolo, assicurandosi che le interfacce coincidano senza sovrapposizioni [SOP-490].\n\n#### Numero di Elementi della Griglia\n- **Numero di Elementi**: Generalmente, sono necessari circa 1 milione di elementi per l'intero impeller, con un range accettabile tra 600.000 e 1.400.000 elementi. La mesh deve essere raffinata nelle zone con alti gradienti di velocità, come vicino al bordo di attacco (LE) e al bordo di uscita (TE), e vicino alle pareti [SOP-490].\n\n### 3. Collegamento SOP → Mod\nNon è stato specificato un modulo di calcolo Excel associato a questa SOP nei documenti indicizzati. Pertanto, non è possibile fornire dettagli su un flusso di lavoro che coinvolga un Mod specifico.\n\n### ## Riferimenti Documenti\n- SOP-490: /Users/mauriziocapitanio/Documents/Alveo/Sviluppo copia/TrilliumVersione1/Technical Documentation Project/Internal Documents/R&D/SOP-490 Rev.1 - ENG - Guidelines for Meshing Impeller for CFD Analysis_928905.pdf\n\nQuesta risposta si basa esclusivamente sui documenti indicizzati e non include informazioni non presenti nei documenti forniti.",
+      "docs": [
+        {
+          "source": "/Users/mauriziocapitanio/Documents/Alveo/Sviluppo copia/TrilliumVersione1/Technical Documentation Project/Internal Documents/R&D/SOP-490 Rev.1 - ENG - Guidelines for Meshing Impeller for CFD Analysis_928905.pdf",
+          "text": "or Meshing Impeller for CFD Analysis \nCompiled Fluid Dynamics Engineer/E.Riccio \nRev.: 0 \nVerified  QA/HSEM-C.Delli Quadri/M.Tremolada \nDate: 05/11/2024\n\nApproved R&D Manager/M.Borghetti \nPage 6 of 29"
+        },
+        {
+          "source": "/Users/mauriziocapitanio/Documents/Alveo/Sviluppo copia/TrilliumVersione1/Technical Documentation Project/Internal Documents/R&D/SOP-490 Rev.1 - ENG - Guidelines for Meshing Impeller for CFD Analysis_928905.pdf",
+          "text": "-structured mesh.\n\n11. Correct periodicity \nTo avoid problems of stability and convergence of the calculation it is necessary that the \"3D \nmodel of the single impeller blade\" has correct periodicity."
+        },
+        {
+          "source": "/Users/mauriziocapitanio/Documents/Alveo/Sviluppo copia/TrilliumVersione1/Technical Documentation Project/Internal Documents/R&D/SOP-490 Rev.1 - ENG - Guidelines for Meshing Impeller for CFD Analysis_928905.pdf",
+          "text": "g \"O\" type meshing, due to the reduced space between the TE and the \ninterface, the generated cells are distorted and of poor quality; to overcome this problem it is \nnecessary to use a \"C\" type mesh."
+        },
+        {
+          "source": "/Users/mauriziocapitanio/Documents/Alveo/Sviluppo copia/TrilliumVersione1/Technical Documentation Project/Internal Documents/R&D/SOP-490 Rev.1 - ENG - Guidelines for Meshing Impeller for CFD Analysis_928905.pdf",
+          "text": "so that the results can be considered a valid approximation of the real \nphysical phenomenon the simulation must respect the three fundamental concepts of: consistency, \nstability and convergence [1]."
+        },
+        {
+          "source": "/Users/mauriziocapitanio/Documents/Alveo/Sviluppo copia/TrilliumVersione1/Technical Documentation Project/Internal Documents/R&D/SOP-504 Rev.1 - ENG - Guidelines for Meshing pump (Stage geometry) for CFD Analysis_928906.pdf",
+          "text": "geometry) for CFD Analysis \nCompiled Fluid Dynamics Engineer/E.Riccio \nRev.: 0 \nVerified QA/HSEM-C.Delli Quadri/M.Tremolada \nDate: 05/11/2024\n\nApproved R&D Manager/M.Borghetti \nPage 9 of 40\n\nMod.120-7"
+        },
+        {
+          "source": "/Users/mauriziocapitanio/Documents/Alveo/Sviluppo copia/TrilliumVersione1/Technical Documentation Project/External Documents/Literature/J. F. Gülich - Centrifugal Pumps - 1rd edition 2008.pdf",
+          "text": "good grids thus pays double dividends.  \nThe 3D-geometry model to be meshed must be free of gaps, errors and inaccu-\nracies. Fillet radii between vanes and side walls are critical areas to be watched."
+        },
+        {
+          "source": "/Users/mauriziocapitanio/Documents/Alveo/Sviluppo copia/TrilliumVersione1/Technical Documentation Project/Internal Documents/R&D/SOP-504 Rev.1 - ENG - Guidelines for Meshing pump (Stage geometry) for CFD Analysis_928906.pdf",
+          "text": "” \navailable, it is possible to create a Structured Mesh (for example using the ANSYS ICEM tool), while \nCOPY COMPLIANT to the original document resident on the computer system at the time of printing"
+        },
+        {
+          "source": "/Users/mauriziocapitanio/Documents/Alveo/Sviluppo copia/TrilliumVersione1/Technical Documentation Project/Internal Documents/R&D/SOP-490 Rev.1 - ENG - Guidelines for Meshing Impeller for CFD Analysis_928905.pdf",
+          "text": "or Meshing Impeller for CFD Analysis \nCompiled Fluid Dynamics Engineer/E.Riccio \nRev.: 0 \nVerified  QA/HSEM-C.Delli Quadri/M.Tremolada \nDate: 05/11/2024\n\nApproved R&D Manager/M.Borghetti \nPage 5 of 29"
+        },
+        {
+          "source": "/Users/mauriziocapitanio/Documents/Alveo/Sviluppo copia/TrilliumVersione1/Technical Documentation Project/Internal Documents/R&D/SOP-490 Rev.1 - ENG - Guidelines for Meshing Impeller for CFD Analysis_928905.pdf",
+          "text": "in nature there is no guarantee that it is the \nactual solution. Moreover, this method is sensitive to distorted elements which can prevent \nconvergence if such elements are in critical flow regions.\n"
+        },
+        {
+          "source": "/Users/mauriziocapitanio/Documents/Alveo/Sviluppo copia/TrilliumVersione1/Technical Documentation Project/Internal Documents/R&D/SOP-490 Rev.1 - ENG - Guidelines for Meshing Impeller for CFD Analysis_928905.pdf",
+          "text": "erified  QA/HSEM-C.Delli Quadri/M.Tremolada \nDate: 05/11/2024\n\nApproved R&D Manager/M.Borghetti \nPage 15 of 29\n\nMod.120-7 \nThe acceptability ranges for the different defined criteria are listed below:"
+        }
+      ],
+      "timestamp": 1772035509.01735
+    },
+    "f7c643b9ce9057dc": {
+      "query": "Qual è il peso del casing della pompa 102A48?",
+      "answer": "### Peso del Casing della Pompa 102A48\n\n#### 1. Spiegazione Riassuntiva\nIl peso finito del corpo pompa (casing) della pompa identificata come 102A48 è stato calcolato e risulta essere 241 kg. Questo dato è stato estratto direttamente dal disegno tecnico del componente [DOC-1].\n\n#### 2. Dettagli Tecnici e Formule\n- **Peso Finito (calcolato)**: 241 kg [DOC-1].\n- **Materiale**: Non specificato nel documento, ma tipicamente per componenti di questo tipo si utilizza acciaio al carbonio o acciaio inox, a seconda delle specifiche del progetto.\n- **Normativa di riferimento**: ANSI 300, che indica la classe di pressione per le flange e i componenti pressurizzati [DOC-1].\n\n#### 3. Metodo di Calcolo\nIl documento non fornisce dettagli sul metodo di calcolo del peso finito. Tuttavia, per componenti simili, il peso può essere stimato utilizzando formule di scaling per componenti di fusione, come descritto nel contesto di dominio:\n\n\\[ p_{\\text{new}} = p_{\\text{ref}} \\times f^{2.3 \\div 2.4} \\times \\frac{\\rho_{\\text{new}}}{\\rho_{\\text{ref}}} \\]\n\nDove:\n- \\( p_{\\text{ref}} \\) è il peso del componente di riferimento.\n- \\( f \\) è il fattore di scala basato sulle dimensioni geometriche.\n- \\( \\rho_{\\text{new}}/\\rho_{\\text{ref}} \\) è il rapporto delle densità tra il nuovo materiale e quello di riferimento.\n\n#### 4. Collegamento SOP → Mod\nNon ci sono riferimenti diretti a SOP o Mod specifici per il calcolo del peso nel documento fornito. Tuttavia, per calcoli più complessi, si potrebbe fare riferimento a SOP-521 e Mod.497 per metodologie di calcolo dettagliate.\n\n### Riferimenti Documenti\n- **DOC-1**: /Users/mauriziocapitanio/Documents/Alveo/Sviluppo copia/TrilliumVersione2/trillium/Test02/OneDrive_1_10-02-2026/Drawings 100AP40/MACH.CASING-102A48F30-REV02-A2.tif\n\nQuesta risposta è basata esclusivamente sui documenti indicizzati e non include informazioni esterne o ipotetiche.",
+      "docs": [
+        {
+          "source": "/Users/mauriziocapitanio/Documents/Alveo/Sviluppo copia/TrilliumVersione2/trillium/Test02/OneDrive_1_10-02-2026/Drawings 100AP40/MACH.CASING-102A48F30-REV02-A2.tif",
+          "text": "ine di acquisto)\nRaw casting : 102A48RM3\nGrezzo : 102A48RM3\nFinish weight (calculated) : 241 kg\nPeso finito (calcolato) : 241 kg\nCOMPILED\nCHECKED\nAPPROVED\nDATE\nCLIENTE/CUSTOMER COSTRUZIONE/COSTRUCTION"
+        },
+        {
+          "source": "/Users/mauriziocapitanio/Documents/Alveo/Sviluppo copia/TrilliumVersione2/trillium/Test02/OneDrive_1_10-02-2026/OH2 database/102A79P10-REV00-A3.tif",
+          "text": "Peso sgrossato : 532±15% kg\n- tolleranze generali di lavorazione secondo norme ISO 2768 -mK\n(34.5)\n\nR6\n(11)\n(⌀66±0.5)\n(35)\n\nPeso sgrossato : 532+15% kg\n\nUnless otherwise specified:\n- tolerances accord"
+        },
+        {
+          "source": "/Users/mauriziocapitanio/Documents/Alveo/Sviluppo copia/TrilliumVersione2/trillium/Test02/OneDrive_1_10-02-2026/OH2 database/102A72P10-REV00-A2.tif",
+          "text": "--- Page 1 ---\nWO\n\nSection A-A\nSezione A-A\n\na\n\nN\n\n;\n\nci\n\nPre-machining weight : 1025 kg\nPeso sgrossato : 1025 kg\n\nRaw casting : 102A72RM1\nGrezzo : 102A72RM1\n\nUnless otherwise specified\n- tolerances ac"
+        },
+        {
+          "source": "/Users/mauriziocapitanio/Documents/Alveo/Sviluppo copia/TrilliumVersione2/trillium/Test02/OneDrive_1_10-02-2026/OH2 database/102A74RM1-REV01-A1.tif",
+          "text": "i di rugosità superficiale richiesti devono essere ottenuti di fusione e/o di\nmolatura.\nRaw casting weight : 940 kg\nPeso getto grezzo : 940 kg\nHydraulic layout : 102A74HY1\nTracciato idraulico : 102A74"
+        },
+        {
+          "source": "/Users/mauriziocapitanio/Documents/Alveo/Sviluppo copia/TrilliumVersione2/trillium/Test02/OneDrive_1_10-02-2026/OH2 database/102A72RM2-REV00-A1.tif",
+          "text": "utte le superfici se non diversamente\nspe ato sul disegno.\n— | valori di rugosità superficiale richiesti devono essere ottenuti di\nfusione e/o di molatura.\nM1102A72RM2/D i 1 g/ ( 69)\nRaw casting weigh"
+        },
+        {
+          "source": "/Users/mauriziocapitanio/Documents/Alveo/Sviluppo copia/TrilliumVersione2/trillium/Test02/OneDrive_1_10-02-2026/OH2 database/102A74RM2-REV01-A2.tif",
+          "text": " 102A74HY1\nSection C-C\nSezione C-C\nÈ\nSection B-B\nSezione B-B\n8062 se non ‘diversamente specificato sul disegno.\n- La massima rugosità superficiale deve essere in conformità con il grado N10 (Ra 12.5) "
+        },
+        {
+          "source": "/Users/mauriziocapitanio/Documents/Alveo/Sviluppo copia/TrilliumVersione2/trillium/Weight Estimation Project-2/Considerazioni Dopo Meeting_2026-02-10.docx",
+          "text": "inazione degli spessori. Lo spessore dei componenti non segue una semplice proporzione lineare. Dipende da vari fattori: la pressione richiesta, quindi la prevalenza espressa in termini di pressione; "
+        },
+        {
+          "source": "/Users/mauriziocapitanio/Documents/Alveo/Sviluppo copia/TrilliumVersione2/trillium/Weight Estimation Project-2/Considerazioni Dopo Meeting_2026-02-10.docx",
+          "text": "inazione degli spessori. Lo spessore dei componenti non segue una semplice proporzione lineare. Dipende da vari fattori: la pressione richiesta, quindi la prevalenza espressa in termini di pressione; "
+        },
+        {
+          "source": "/Users/mauriziocapitanio/Documents/Alveo/Sviluppo copia/TrilliumVersione2/trillium/Weight Estimation Project-2/Considerazioni Dopo Meeting_2026-02-10.docx",
+          "text": "inazione degli spessori. Lo spessore dei componenti non segue una semplice proporzione lineare. Dipende da vari fattori: la pressione richiesta, quindi la prevalenza espressa in termini di pressione; "
+        },
+        {
+          "source": "/Users/mauriziocapitanio/Documents/Alveo/Sviluppo copia/TrilliumVersione1/Technical Documentation Project/External Documents/Paper/P1071-79.pdf",
+          "text": "Bearing span, L (mm/in) 1998/78.7 1951/76.8\n9 Impeller dia, D2 (mm/in) 320/12.60 270/10.63\n10 Specific speed ng (m,m3/s//£t,GPM)| 26/1482 19/1083\n11 Dia. clearances, 2h, new (mm/in) .45/.0177 +5/.0197"
+        }
+      ],
+      "timestamp": 1772196041.5537019
+    },
+    "ce8df144137e7c8e": {
+      "query": "Quanto pesa la girante 230A48RM2",
+      "answer": "### Peso della Girante 230A48RM2\n\n#### 1. Spiegazione Riassuntiva\nNon è stato possibile trovare il peso specifico della girante 230A48RM2 nei documenti indicizzati. Tuttavia, posso fornire una metodologia generale per stimare il peso di una girante utilizzando le formule di scaling e i dati disponibili nei documenti.\n\n#### 2. Dettagli Tecnici e Formule\nPer stimare il peso di una girante, si utilizza la formula di scaling per componenti di fusione (casting):\n\n\\[ p_{\\text{new}} = p_{\\text{ref}} \\times f^{2.3 \\div 2.4} \\times \\frac{\\rho_{\\text{new}}}{\\rho_{\\text{ref}}} \\]\n\ndove:\n- \\( p_{\\text{ref}} \\) è il peso della girante di riferimento.\n- \\( f \\) è il fattore di scala, calcolato come il rapporto tra il diametro della girante nuova e quello della girante di riferimento.\n- \\( \\rho_{\\text{new}}/\\rho_{\\text{ref}} \\) è il rapporto tra la densità del materiale nuovo e quella del materiale di riferimento.\n\n**Materiali e Densità:**\n- Acciaio al carbonio (A216 WCB): 7850 kg/m³\n- SS 316 / 316L: 7960 kg/m³\n- Altri materiali e le loro densità sono elencati nel contesto di dominio.\n\n**Esempio di Calcolo:**\nSupponiamo di avere una girante di riferimento con un peso noto di 100 kg, un diametro di riferimento di 500 mm, e una nuova girante con un diametro di 600 mm. Se il materiale è lo stesso, il calcolo del peso della nuova girante sarebbe:\n\n1. Calcolare il fattore di scala: \\( f = \\frac{600}{500} = 1.2 \\)\n2. Applicare la formula di scaling: \n   \\[ p_{\\text{new}} = 100 \\times 1.2^{2.35} \\times \\frac{7850}{7850} \\]\n   \\[ p_{\\text{new}} \\approx 100 \\times 1.2^{2.35} \\approx 144 \\text{ kg} \\]\n\n#### 3. Collegamento SOP e Moduli\nNon sono stati trovati riferimenti specifici a SOP o moduli di calcolo Excel per la girante 230A48RM2 nei documenti indicizzati.\n\n#### ## Riferimenti Documenti\nNon sono stati trovati riferimenti specifici per la girante 230A48RM2 nei documenti indicizzati. Tuttavia, i documenti di riferimento per le formule di scaling e le densità dei materiali sono:\n\n- **Formule di Scaling**: Contesto di dominio\n- **Materiali e Densità**: Contesto di dominio\n\nSe hai accesso a ulteriori documenti o dettagli specifici sulla girante 230A48RM2, ti invitiamo a condividerli per un'analisi più precisa.",
+      "docs": [
+        {
+          "source": "/Users/mauriziocapitanio/Documents/Alveo/Sviluppo copia/TrilliumVersione2/trillium/Test02/OneDrive_1_10-02-2026/OH2 database/230A79F11-REV01-A2.tif",
+          "text": "Finish machined impeller\n(17.8+0.4 a $650). - raggi non quotati R0.5 100AP63 Girante lavorata Lul\n- tolleranze generali di lavorazione secondo norme ISO 2768 -mK IMP < A\n- Impeller and rotating compon"
+        },
+        {
+          "source": "/Users/mauriziocapitanio/Documents/Alveo/Sviluppo copia/TrilliumVersione2/trillium/Test02/OneDrive_1_10-02-2026/OH2 database/230A72F11-REV01-A2.tif",
+          "text": "Note for balancing /Nota per equilibratura\n~ Impeller and rotating components dynamically balanced according to iSO 1940-1 grade 2.5\n- Equilibratura girante e componenti rotati seconde ISO 1940-1 grad"
+        },
+        {
+          "source": "/Users/mauriziocapitanio/Documents/Alveo/Sviluppo copia/TrilliumVersione2/trillium/Test02/OneDrive_1_10-02-2026/OH2 database/230A72F11-REV00-A2.tif",
+          "text": "Note for balancing /Nota per equilibratura\n- Impeller and rotating components dynamically balanced according to ISO 1940-1 grade 2.5\n- Equilibratura girante e componenti rotati secondo ISO 1940-1 grad"
+        },
+        {
+          "source": "/Users/mauriziocapitanio/Documents/Alveo/Sviluppo copia/TrilliumVersione2/trillium/Test02/OneDrive_1_10-02-2026/OH2 database/230A72F12-REV00-A2.tif",
+          "text": "Note for balancing /Nota per equilibratura\n- Impeller and rotating components dynamically balanced according to ISO 1940-1 grade 2.5\n- Equilibratura girante e componenti rotati secondo ISO 1940-1 grad"
+        },
+        {
+          "source": "/Users/mauriziocapitanio/Documents/Alveo/Sviluppo copia/TrilliumVersione2/trillium/Test02/OneDrive_1_10-02-2026/OH2 database/230A72F10-REV01-A2.tif",
+          "text": "Unless otherwise specified Se non diversamente specifi\n- internal corners radius R0.5 - raggi interni non quotati F\n- tolerances according with ISO 2768-mk = tolleranze generali di lave\n- all edges to"
+        },
+        {
+          "source": "/Users/mauriziocapitanio/Documents/Alveo/Sviluppo copia/TrilliumVersione2/trillium/Test02/OneDrive_1_10-02-2026/OH2 database/230A79F12-REV02-A2.tif",
+          "text": "Nota per equilibratura\n~ Impeller and-rofating components dynamically balanced according to:ISO 1940-1:grade 2,5\n- Equilibratura dinamica girante e componenti rotanti secondo ISO 1940-1 grado 2.5\n\nQI "
+        },
+        {
+          "source": "/Users/mauriziocapitanio/Documents/Alveo/Sviluppo copia/TrilliumVersione2/trillium/Test02/OneDrive_1_10-02-2026/OH2 database/230A74F12-REV01-A2.tif",
+          "text": "Note for balancing /Nota per equilibratura - raggi inte\n- Impeller and rotating components dynamically balanced according to ISO 1940-1 grade 2.5 - tolleranz\n- Equilibratura girante e componenti rotan"
+        },
+        {
+          "source": "/Users/mauriziocapitanio/Documents/Alveo/Sviluppo copia/TrilliumVersione2/trillium/Test02/OneDrive_1_10-02-2026/OH2 database/230A72F12-REV01-A2.tif",
+          "text": "Se non diversamente specifi\n- raggi interni non quotati f\n- tolleranze generali di lavi\n“rompere spigoli vivi 0.6x45\n- Impeller and rotating components dynamically balanced according to ISO 1940-1 gra"
+        },
+        {
+          "source": "/Users/mauriziocapitanio/Documents/Alveo/Sviluppo copia/TrilliumVersione2/trillium/Test02/OneDrive_1_10-02-2026/OH2 database/230A74F10-REV02-A2.tif",
+          "text": "7 9 d 4 (spessore disco minimo ammissil\nula .\nen Unless other\nx E ©) ~~ internal ¢\n|> (32.2+0.4 at 9650) - tolerance\n\nNote for balancing /Nota per equilibratura - raggi int:\n- Impeller and rotating co"
+        }
+      ],
+      "timestamp": 1772196128.371414
+    }
+  }
+}

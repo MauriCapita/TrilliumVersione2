@@ -30,7 +30,12 @@ from config import (
     MAX_IMAGE_SIDE_PX,
     TESSERACT_LANG,
     IMAGE_EXTRACTION_STRATEGY,
+    USE_TILE_OCR,
+    TILE_OVERLAP_PCT,
+    TITLE_BLOCK_ZOOM,
+    TILE_VISION_PROVIDER,
 )
+from rag.tile_ocr import tile_ocr_extract, tile_vision_extract
 from rich import print
 
 # Statistiche estrazione immagini (per log/UI): lista di {"path", "method", "pages", "size_mb"}
@@ -125,6 +130,58 @@ def extract_pdf_local(path):
         print(f"[yellow]Errore PyMuPDF su PDF {path}: {e}[/yellow]")
         return ""
 
+
+def extract_pdf_ocr(path, max_pages=50):
+    """
+    OCR per PDF scansionati: renderizza ogni pagina come immagine con PyMuPDF,
+    poi esegue Tesseract OCR. Molto efficace per documenti tecnici scansionati.
+    """
+    try:
+        doc = fitz.open(path)
+        n_pages = min(len(doc), max_pages)
+        parts = []
+        for i in range(n_pages):
+            page = doc[i]
+            # Renderizza pagina come immagine a 300 DPI per OCR di qualità
+            pix = page.get_pixmap(dpi=300)
+            img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
+            # OCR con Tesseract
+            try:
+                page_text = pytesseract.image_to_string(img, lang=TESSERACT_LANG)
+            except Exception:
+                page_text = pytesseract.image_to_string(img)
+            if page_text and page_text.strip():
+                parts.append(f"--- Page {i + 1} ---\n{page_text.strip()}")
+        doc.close()
+        result = "\n\n".join(parts)
+        if result:
+            print(f"[green]✔ OCR completato: {n_pages} pagine, {len(result)} caratteri[/green]")
+        return result
+    except Exception as e:
+        print(f"[yellow]Errore OCR PDF {path}: {e}[/yellow]")
+        return ""
+
+
+def _pdf_page_to_base64(path, page_num=0):
+    """
+    Renderizza una pagina PDF come immagine JPEG base64 per Vision API.
+    Usato quando Tesseract non riesce ad estrarre testo sufficiente.
+    """
+    try:
+        doc = fitz.open(path)
+        if page_num >= len(doc):
+            return None, None
+        page = doc[page_num]
+        pix = page.get_pixmap(dpi=200)
+        img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
+        doc.close()
+        buf = io.BytesIO()
+        img.save(buf, format="JPEG", quality=85)
+        b64 = base64.b64encode(buf.getvalue()).decode("utf-8")
+        return b64, "image/jpeg"
+    except Exception:
+        return None, None
+
 def _ocr_single_image(img, lang=None):
     """Esegue OCR su una singola PIL Image; inversione per WhiteIsZero (tag TIFF 262 = 0)."""
     lang = lang or TESSERACT_LANG
@@ -144,7 +201,51 @@ def _ocr_single_image(img, lang=None):
 
 
 def extract_tif_local(path):
-    """OCR locale con Tesseract; supporta TIF multi-pagina e bi-level (WhiteIsZero)."""
+    """OCR locale con Tesseract; supporta TIF multi-pagina, bi-level (WhiteIsZero), e tile-based OCR."""
+    try:
+        # --- TILE-BASED OCR (se abilitato) ---
+        if USE_TILE_OCR:
+            tile_text = tile_ocr_extract(
+                path,
+                ocr_func=_ocr_single_image,
+                overlap_pct=TILE_OVERLAP_PCT,
+                title_block_zoom=TITLE_BLOCK_ZOOM,
+            )
+            # Prova anche il metodo diretto per confronto
+            direct_text = _extract_tif_direct(path)
+            # Usa il risultato migliore (piu testo)
+            if len(tile_text) > len(direct_text) * 1.1:
+                print(f"[green]Tile OCR: {len(tile_text)} chars (diretto: {len(direct_text)})[/green]")
+                best_local = tile_text
+            elif direct_text:
+                print(f"[cyan]OCR diretto usato: {len(direct_text)} chars (tile: {len(tile_text)})[/cyan]")
+                best_local = direct_text
+            else:
+                best_local = tile_text or direct_text or ""
+
+            # --- TILE VISION attivo (se provider configurato) ---
+            if TILE_VISION_PROVIDER in ("openai", "openrouter"):
+                vision_func = _get_tile_vision_func()
+                if vision_func:
+                    print(f"[cyan]Tile Vision ({TILE_VISION_PROVIDER}): OCR avanzato su zone...[/cyan]")
+                    vision_text = _extract_image_with_tile_vision(path, vision_func)
+                    if vision_text and len(vision_text) > len(best_local) * 0.5:
+                        # Combina: testo locale + testo Vision per massimo contenuto
+                        from rag.tile_ocr import _deduplicate_lines
+                        combined = _deduplicate_lines([best_local, vision_text])
+                        print(f"[green]Tile Vision + locale combinati: {len(combined)} chars (locale: {len(best_local)}, vision: {len(vision_text)})[/green]")
+                        return combined
+
+            return best_local
+        else:
+            return _extract_tif_direct(path)
+    except Exception as e:
+        print(f"[yellow]Errore Tesseract su TIF {path}: {e}[/yellow]")
+        return ""
+
+
+def _extract_tif_direct(path):
+    """OCR diretto (senza tile) su TIF — metodo originale."""
     try:
         img = Image.open(path)
         n_frames = getattr(img, "n_frames", 1)
@@ -159,7 +260,7 @@ def extract_tif_local(path):
                 parts.append(f"--- Page {i + 1} ---\n{page_text}")
         return "\n\n".join(parts) if parts else ""
     except Exception as e:
-        print(f"[yellow]Errore Tesseract su TIF {path}: {e}[/yellow]")
+        print(f"[yellow]Errore OCR diretto TIF {path}: {e}[/yellow]")
         return ""
 
 
@@ -554,6 +655,103 @@ def extract_with_google_vision(path):
         return ""
 
 # ============================================================
+# 2b) TILE-BASED VISION EXTRACTION
+# ============================================================
+
+def _extract_image_with_tile_vision(path, vision_send_func):
+    """
+    Esegue tile-based Vision: croppa l'immagine in zone e invia ogni tile
+    alla funzione Vision per un OCR più preciso.
+
+    Args:
+        path: Percorso al file immagine
+        vision_send_func: Funzione che prende PIL.Image e restituisce testo
+
+    Returns:
+        Testo estratto combinato
+    """
+    try:
+        return tile_vision_extract(
+            path,
+            vision_func=vision_send_func,
+            overlap_pct=TILE_OVERLAP_PCT,
+            title_block_zoom=TITLE_BLOCK_ZOOM,
+            max_tiles_for_vision=6,
+        )
+    except Exception as e:
+        print(f"[yellow]⚠ Tile Vision fallito: {e}[/yellow]")
+        return ""
+
+
+def _vision_func_openrouter(img, model="anthropic/claude-3.5-sonnet"):
+    """Invia una PIL.Image a OpenRouter Vision e restituisce il testo."""
+    if not OPENROUTER_API_KEY:
+        return ""
+    try:
+        import io as _io
+        buf = _io.BytesIO()
+        if img.mode not in ("RGB", "RGBA"):
+            img = img.convert("RGB")
+        img.save(buf, format="PNG", quality=90)
+        b64 = base64.b64encode(buf.getvalue()).decode("utf-8")
+        client = get_openrouter_client()
+        r = client.chat.completions.create(
+            model=model,
+            messages=[{
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": "You are an OCR system. Extract ALL text visible in this image. Include every word, number, symbol. Output ONLY the extracted text."},
+                    {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{b64}"}}
+                ]
+            }],
+            temperature=0
+        )
+        return (r.choices[0].message.content or "").strip()
+    except Exception as e:
+        print(f"[yellow]⚠ Tile Vision OpenRouter: {e}[/yellow]")
+        return ""
+
+
+def _vision_func_openai(img):
+    """Invia una PIL.Image a GPT-4o Vision e restituisce il testo."""
+    if not OPENAI_API_KEY:
+        return ""
+    try:
+        import io as _io
+        buf = _io.BytesIO()
+        if img.mode not in ("RGB", "RGBA"):
+            img = img.convert("RGB")
+        img.save(buf, format="PNG", quality=90)
+        b64 = base64.b64encode(buf.getvalue()).decode("utf-8")
+        client = get_openai_client()
+        r = client.chat.completions.create(
+            model=VISION_MODEL_OPENAI,
+            messages=[{
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": "You are an OCR system for technical engineering drawings. Extract ALL text visible in this image. Include every word, number, symbol, dimension, tolerance, material specification, weight, part number, and annotation. Output ONLY the extracted text, preserving structure."},
+                    {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{b64}"}}
+                ]
+            }],
+            temperature=0.1,
+            max_tokens=4000
+        )
+        return (r.choices[0].message.content or "").strip()
+    except Exception as e:
+        print(f"[yellow]Tile Vision OpenAI: {e}[/yellow]")
+        return ""
+
+
+def _get_tile_vision_func():
+    """Restituisce la funzione Vision appropriata in base al provider configurato."""
+    if TILE_VISION_PROVIDER == "openai" and OPENAI_API_KEY:
+        return _vision_func_openai
+    elif TILE_VISION_PROVIDER == "openrouter" and OPENROUTER_API_KEY:
+        return _vision_func_openrouter
+    return None
+
+
+# ============================================================
 # 3) PIPELINE IBRIDA COMPLETA
 # ============================================================
 
@@ -627,6 +825,50 @@ def extract_text(path):
         print(f"[yellow]⚠ File .txt con testo insufficiente. Salto Vision.[/yellow]")
         return text_local
 
+    # --- 1b) PDF SCANSIONATI: OCR con Tesseract via PyMuPDF rendering ---
+    if ext == ".pdf" and len(text_local) < min_len:
+        print("[cyan]→ PDF scansionato rilevato. OCR con Tesseract (300 DPI)...[/cyan]")
+        text_ocr = extract_pdf_ocr(path)
+        if len(text_ocr) >= min_len:
+            return text_ocr
+        # Se Tesseract non basta, prova Vision sulla prima pagina
+        if OPENAI_API_KEY:
+            print("[cyan]→ OCR insufficiente. Tentativo con OpenAI Vision su pagine PDF...[/cyan]")
+            try:
+                doc = fitz.open(path)
+                n_pages = min(len(doc), 10)  # Max 10 pagine via Vision
+                vision_parts = []
+                client = get_openai_client()
+                for i in range(n_pages):
+                    b64, mime = _pdf_page_to_base64(path, page_num=i)
+                    if not b64:
+                        continue
+                    response = client.chat.completions.create(
+                        model=VISION_MODEL_OPENAI,
+                        messages=[{
+                            "role": "user",
+                            "content": [
+                                {"type": "text", "text": "Extract ALL text from this document page. Include every word, number, symbol. Output ONLY the extracted text."},
+                                {"type": "image_url", "image_url": {"url": f"data:{mime};base64,{b64}"}}
+                            ]
+                        }],
+                        temperature=0.1,
+                        max_tokens=4000
+                    )
+                    page_text = response.choices[0].message.content.strip()
+                    if page_text:
+                        vision_parts.append(f"--- Page {i + 1} ---\n{page_text}")
+                doc.close()
+                if vision_parts:
+                    result = "\n\n".join(vision_parts)
+                    print(f"[green]✔ Vision: estratte {len(vision_parts)} pagine ({len(result)} chars)[/green]")
+                    return result
+            except Exception as e:
+                print(f"[yellow]⚠ Vision PDF fallito: {e}[/yellow]")
+        # Usa almeno il testo OCR parziale se c'è qualcosa
+        if text_ocr:
+            return text_ocr
+
     if is_image and IMAGE_EXTRACTION_STRATEGY == "local_only":
         text_fallback = _fallback_description_for_image(path)
         IMAGE_EXTRACTION_STATS.append({"path": path, "method": "fallback", "pages": 1, "size_mb": round(file_size_mb, 2)})
@@ -635,15 +877,28 @@ def extract_text(path):
     print("[yellow]⚠ Testo insufficiente localmente → passo a Vision[/yellow]")
 
     # --- 2) PER IMMAGINI: Vision (Google, Claude, Gemini) ---
+    # Se tile Vision provider e' configurato, prova prima la modalita' tile
     result_text = ""
     method_used = None
     if ext in [".tif", ".tiff", ".bmp", ".png", ".heic", ".heif"]:
-        if GOOGLE_CLOUD_VISION_KEY or GOOGLE_CLOUD_VISION_PROJECT:
-            print(f"[cyan]→ Tentativo con Google Cloud Vision API...[/cyan]")
-            result_text = extract_with_google_vision(path)
-            if len(result_text) >= min_len:
-                method_used = "vision_google"
-                print("[green]✔ Testo estratto con Google Vision API[/green]")
+        # 2a) Tile Vision (se provider configurato)
+        vision_func = _get_tile_vision_func()
+        if USE_TILE_OCR and vision_func:
+            print(f"[cyan]Tentativo Tile Vision ({TILE_VISION_PROVIDER}) su zone + cartiglio zoom...[/cyan]")
+            tile_result = _extract_image_with_tile_vision(path, vision_func)
+            if len(tile_result) >= min_len:
+                result_text = tile_result
+                method_used = f"tile_vision_{TILE_VISION_PROVIDER}"
+                print(f"[green]Tile Vision: {len(tile_result)} caratteri estratti[/green]")
+
+        # 2b) Fallback: Vision su immagine intera (come prima)
+        if not result_text or len(result_text) < min_len:
+            if GOOGLE_CLOUD_VISION_KEY or GOOGLE_CLOUD_VISION_PROJECT:
+                print(f"[cyan]→ Tentativo con Google Cloud Vision API...[/cyan]")
+                result_text = extract_with_google_vision(path)
+                if len(result_text) >= min_len:
+                    method_used = "vision_google"
+                    print("[green]✔ Testo estratto con Google Vision API[/green]")
         if not result_text or len(result_text) < min_len:
             if OPENROUTER_API_KEY:
                 print(f"[cyan]→ Tentativo con Claude 3.5 Sonnet (OpenRouter)...[/cyan]")
@@ -670,8 +925,8 @@ def extract_text(path):
         if not result_text:
             print(f"[yellow]⚠ Nessun servizio cloud disponibile per {ext.upper()}.[/yellow]")
 
-    # --- 3) ALTRI FORMATI: OpenAI Vision ---
-    if not result_text or len(result_text) < min_len:
+    # --- 3) ALTRI FORMATI (non PDF, non immagini): OpenAI Vision ---
+    if ext != ".pdf" and (not result_text or len(result_text) < min_len):
         text_ai = extract_with_openai_vision(path)
         if len(text_ai) >= min_len:
             if is_image:

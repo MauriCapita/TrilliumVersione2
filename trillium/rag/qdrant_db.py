@@ -127,8 +127,19 @@ def qdrant_add_documents(ids: List[str], documents: List[str], metadatas: List[D
     )
 
 
-def qdrant_query(query_text: str, n_results: int = 5) -> List[Dict]:
-    """Esegue una query su Qdrant"""
+def qdrant_query(query_text: str, n_results: int = 5, filters: dict = None) -> List[Dict]:
+    """Esegue una query su Qdrant con filtri opzionali sui metadati.
+    
+    Args:
+        query_text: Testo della query
+        n_results: Numero risultati
+        filters: Dict opzionale con filtri metadati:
+            - pump_family: str (es. "OH2")
+            - doc_type: str (es. "parts_list")
+            - has_weight: bool
+            - flange_rating: int (es. 300)
+            - material: str (cerca nei materiali)
+    """
     global _embedding_function
     
     client, collection_name = get_qdrant_collection()
@@ -140,12 +151,16 @@ def qdrant_query(query_text: str, n_results: int = 5) -> List[Dict]:
     # Genera embedding della query
     query_embedding = _embedding_function([query_text])[0]
     
+    # Costruisci filtri Qdrant
+    query_filter = _build_qdrant_filter(filters) if filters else None
+    
     # Esegui ricerca usando query_points (API corretta di Qdrant)
     try:
         # Prova con query_points passando direttamente il vettore
         query_result = client.query_points(
             collection_name=collection_name,
             query=query_embedding,
+            query_filter=query_filter,
             limit=n_results
         )
         results = query_result.points
@@ -156,6 +171,7 @@ def qdrant_query(query_text: str, n_results: int = 5) -> List[Dict]:
             query_result = client.query_points(
                 collection_name=collection_name,
                 query=Query(vector=QueryVector(vector=query_embedding)),
+                query_filter=query_filter,
                 limit=n_results
             )
             results = query_result.points
@@ -166,14 +182,74 @@ def qdrant_query(query_text: str, n_results: int = 5) -> List[Dict]:
     docs = []
     for point in results:
         payload = point.payload if point.payload else {}
-        docs.append({
+        doc = {
             "id": str(point.id),
             "text": payload.get("text", ""),
             "source": payload.get("source", ""),
             "score": getattr(point, 'score', 0.0)
-        })
+        }
+        # Aggiungi metadati arricchiti se presenti
+        for key in ["pump_family", "doc_type", "materials", "has_weight",
+                    "max_weight_kg", "flange_rating", "standards",
+                    "ai_enriched", "ai_components_count"]:
+            if key in payload:
+                doc[key] = payload[key]
+        docs.append(doc)
     
     return docs
+
+
+def _build_qdrant_filter(filters: dict):
+    """Costruisce un filtro Qdrant dai parametri."""
+    if not filters:
+        return None
+    
+    conditions = []
+    
+    if filters.get("pump_family"):
+        conditions.append(
+            models.FieldCondition(
+                key="pump_family",
+                match=models.MatchValue(value=filters["pump_family"])
+            )
+        )
+    
+    if filters.get("doc_type"):
+        conditions.append(
+            models.FieldCondition(
+                key="doc_type",
+                match=models.MatchValue(value=filters["doc_type"])
+            )
+        )
+    
+    if filters.get("has_weight") is True:
+        conditions.append(
+            models.FieldCondition(
+                key="has_weight",
+                match=models.MatchValue(value=True)
+            )
+        )
+    
+    if filters.get("flange_rating"):
+        conditions.append(
+            models.FieldCondition(
+                key="flange_rating",
+                match=models.MatchValue(value=filters["flange_rating"])
+            )
+        )
+    
+    if filters.get("material"):
+        conditions.append(
+            models.FieldCondition(
+                key="materials",
+                match=models.MatchAny(any=[filters["material"]])
+            )
+        )
+    
+    if not conditions:
+        return None
+    
+    return models.Filter(must=conditions)
 
 
 def qdrant_get_all() -> Dict:
