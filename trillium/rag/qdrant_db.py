@@ -188,12 +188,10 @@ def qdrant_query(query_text: str, n_results: int = 5, filters: dict = None) -> L
             "source": payload.get("source", ""),
             "score": getattr(point, 'score', 0.0)
         }
-        # Aggiungi metadati arricchiti se presenti
-        for key in ["pump_family", "doc_type", "materials", "has_weight",
-                    "max_weight_kg", "flange_rating", "standards",
-                    "ai_enriched", "ai_components_count"]:
-            if key in payload:
-                doc[key] = payload[key]
+        # Aggiungi TUTTI i metadati dal payload (inclusi dati estrattore componente)
+        for key, value in payload.items():
+            if key not in ("text", "source"):  # text e source già aggiunti sopra
+                doc[key] = value
         docs.append(doc)
     
     return docs
@@ -304,4 +302,72 @@ def qdrant_check_document_exists(doc_id: str) -> bool:
         return len(result) > 0
     except:
         return False
+
+
+def qdrant_get_indexed_folders() -> Dict:
+    """
+    Restituisce le cartelle sorgente indicizzate con conteggi.
+    Returns: {folder_path: {"files": set(), "chunks": int}}
+    """
+    client = get_qdrant_client()
+    try:
+        result = client.scroll(
+            collection_name=QDRANT_COLLECTION_NAME,
+            limit=10000,
+            with_payload=True,
+            with_vectors=False,
+        )
+        folders = {}
+        for point in result[0]:
+            payload = point.payload or {}
+            source = payload.get("source", "")
+            if not source:
+                continue
+            folder = os.path.dirname(source)
+            if folder not in folders:
+                folders[folder] = {"files": set(), "chunks": 0}
+            folders[folder]["files"].add(os.path.basename(source))
+            folders[folder]["chunks"] += 1
+        # Converti set in count per serializzazione
+        return {k: {"file_count": len(v["files"]), "chunks": v["chunks"]}
+                for k, v in folders.items()}
+    except Exception:
+        return {}
+
+
+def qdrant_delete_by_source_prefix(prefix: str) -> int:
+    """
+    Cancella tutti i punti il cui campo 'source' inizia con il prefix dato.
+    Utile per cancellare selettivamente una cartella indicizzata.
+    Returns: numero di punti cancellati
+    """
+    from qdrant_client.models import Filter, FieldCondition, MatchValue
+    client = get_qdrant_client()
+    try:
+        # Scroll tutti i punti per trovare quelli con source che inizia con prefix
+        result = client.scroll(
+            collection_name=QDRANT_COLLECTION_NAME,
+            limit=10000,
+            with_payload=True,
+            with_vectors=False,
+        )
+        ids_to_delete = []
+        for point in result[0]:
+            payload = point.payload or {}
+            source = payload.get("source", "")
+            if source.startswith(prefix):
+                ids_to_delete.append(point.id)
+
+        if ids_to_delete:
+            # Cancella in batch da 100
+            for i in range(0, len(ids_to_delete), 100):
+                batch = ids_to_delete[i:i + 100]
+                client.delete(
+                    collection_name=QDRANT_COLLECTION_NAME,
+                    points_selector=batch,
+                )
+        return len(ids_to_delete)
+    except Exception as e:
+        print(f"Errore cancellazione selettiva: {e}")
+        return 0
 

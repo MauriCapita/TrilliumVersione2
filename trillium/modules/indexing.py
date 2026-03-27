@@ -148,6 +148,38 @@ def render():
                 except Exception:
                     pass
 
+        # Opzioni avanzate
+        col_reindex, col_family = st.columns(2)
+        with col_reindex:
+            force_reindex = st.checkbox(
+                "🔄 Re-indicizza (sovrascrive esistenti)",
+                value=False,
+                help="Se attivo, cancella prima i file già indicizzati di questa cartella e li re-indicizza da zero.",
+                key="force_reindex",
+            )
+        with col_family:
+            # Suggerisci pump_family dal nome cartella
+            suggested_family = ""
+            display_p = st.session_state.get("browse_path", folder_path or "")
+            if display_p:
+                parent_name = os.path.basename(display_p.rstrip("/"))
+                # Estrai famiglia: "OH2 database" → "OH2", "Drawings 100AP40" → "100AP40"
+                for token in parent_name.split():
+                    if token.upper() in ("OH1", "OH2", "OH3", "OH4", "OH5", "BB1", "BB2", "BB3", "BB5", "VS1", "VS4", "VS6"):
+                        suggested_family = token.upper()
+                        break
+                    if token.startswith(("100", "150", "200", "250", "300", "350", "400")):
+                        suggested_family = token
+                        break
+
+            pump_family = st.text_input(
+                "🏷 Famiglia Pompa (auto)",
+                value=suggested_family,
+                placeholder="es. OH2, BB1, 100AP40",
+                help="Se compilato, la famiglia pompa viene assegnata automaticamente a tutti i documenti indicizzati.",
+                key="auto_pump_family",
+            )
+
         col1, col2 = st.columns([1, 4])
         with col1:
             index_button = st.button("Avvia Indicizzazione", type="primary", use_container_width=True)
@@ -158,6 +190,14 @@ def render():
 
                 with st.container():
                     st.markdown("### Indicizzazione in corso")
+
+                    # Pre-cancellazione se re-indicizzazione forzata
+                    if force_reindex and VECTOR_DB == "qdrant":
+                        from rag.qdrant_db import qdrant_delete_by_source_prefix
+                        with st.spinner("🗑 Cancellazione documenti esistenti per questa cartella..."):
+                            deleted = qdrant_delete_by_source_prefix(folder_path)
+                        if deleted > 0:
+                            st.info(f"🔄 Cancellati {deleted} chunk esistenti. Procedo con la re-indicizzazione...")
 
                     # Contatore documenti
                     counter_placeholder = st.empty()
@@ -179,7 +219,7 @@ def render():
                         for root, dirs, files in os.walk(folder_path):
                             dirs[:] = [d for d in dirs if not d.startswith(".")]
                             for f in files:
-                                if f.startswith("."):
+                                if f.startswith(("~$", ".", "Thumbs")) or f == ".DS_Store":
                                     continue
                                 ext = f.rsplit(".", 1)[-1].lower() if "." in f else ""
                                 if sel_ext and ext not in sel_ext:
@@ -213,6 +253,32 @@ def render():
                                 f"<div class='log-container'>{log_html}</div>",
                                 unsafe_allow_html=True,
                             )
+
+                        # Post-indicizzazione: assegna pump_family se specificata
+                        if pump_family and pump_family.strip() and VECTOR_DB == "qdrant":
+                            from rag.qdrant_db import get_qdrant_client, QDRANT_COLLECTION_NAME
+                            try:
+                                q_client = get_qdrant_client()
+                                points, _ = q_client.scroll(
+                                    collection_name=QDRANT_COLLECTION_NAME,
+                                    limit=10000,
+                                    with_payload=True,
+                                    with_vectors=False,
+                                )
+                                ids_to_update = []
+                                for pt in points:
+                                    source = (pt.payload or {}).get("source", "")
+                                    if source.startswith(folder_path):
+                                        ids_to_update.append(pt.id)
+                                if ids_to_update:
+                                    q_client.set_payload(
+                                        collection_name=QDRANT_COLLECTION_NAME,
+                                        payload={"pump_family": pump_family.strip()},
+                                        points=ids_to_update,
+                                    )
+                                    st.info(f"🏷 Famiglia pompa **{pump_family.strip()}** assegnata a {len(ids_to_update)} chunk.")
+                            except Exception as e:
+                                st.warning(f"⚠ Errore assegnazione pump_family: {e}")
 
                         stats_after = get_db_stats()
                         new_docs = stats_after["total_documents"] - stats_before["total_documents"]
@@ -299,53 +365,95 @@ def render():
             else:
                 st.error("URL non valido. Deve iniziare con http:// o https://")
 
-    # Reset database
+    # Gestione Database
     st.markdown("---")
-    st.markdown("### Reset Database")
+    st.markdown("### Gestione Database")
 
     current_stats = get_db_stats()
 
-    col1, col2 = st.columns([3, 1])
-    with col1:
-        st.warning(f"""
-        **ATTENZIONE: Reset Completo del Database**
+    tab_sel, tab_full = st.tabs(["🗂 Cancellazione Selettiva", "⚠️ Reset Completo"])
 
-        Questa azione cancellerà permanentemente:
-        - **{current_stats['total_documents']} documenti** indicizzati
-        - **{current_stats['total_chunks']} chunk** di testo
-        - Tutti i dati nel database vettoriale ({VECTOR_DB.upper()})
+    # --- TAB 1: CANCELLAZIONE SELETTIVA ---
+    with tab_sel:
+        st.caption("Cancella solo i documenti di una cartella specifica, senza toccare il resto del database.")
 
-        **Questa azione è irreversibile.** Dovrai re-indicizzare tutti i documenti.
-        """)
-    with col2:
-        if st.button("Reset Database", type="secondary", use_container_width=True):
-            st.session_state.reset_confirm = True
+        if VECTOR_DB == "qdrant":
+            from rag.qdrant_db import qdrant_get_indexed_folders, qdrant_delete_by_source_prefix
 
-    if st.session_state.get("reset_confirm", False):
-        st.error("**Ultima conferma richiesta**")
-        confirm_text = st.text_input(
-            "Digita 'CONFERMO' per procedere con la cancellazione:",
-            placeholder="CONFERMO",
-        )
+            folders = qdrant_get_indexed_folders()
+            if folders:
+                folder_options = []
+                for folder_path, info in sorted(folders.items()):
+                    label = f"{folder_path}  ({info['file_count']} file, {info['chunks']} chunk)"
+                    folder_options.append((label, folder_path))
 
-        col1, col2 = st.columns(2)
-        with col1:
-            if st.button("Conferma Reset", type="primary"):
-                if confirm_text == "CONFERMO":
-                    try:
-                        with st.spinner("Cancellazione database in corso..."):
-                            reset_database()
-                        st.success("Database resettato con successo.")
-                        st.info("Tutti i documenti sono stati cancellati. Puoi ora indicizzare nuovi documenti.")
-                        st.session_state.reset_confirm = False
-                        time.sleep(2)
+                selected_label = st.selectbox(
+                    "Cartella da cancellare",
+                    options=[l for l, _ in folder_options],
+                    key="sel_delete_folder",
+                )
+                selected_folder = dict(folder_options).get(selected_label, "")
+
+                if selected_folder:
+                    info = folders[selected_folder]
+                    st.warning(f"Verranno cancellati **{info['file_count']} file** ({info['chunks']} chunk) "
+                               f"dalla cartella:\n`{selected_folder}`")
+
+                    if st.button("🗑 Cancella questa cartella", type="secondary", key="btn_sel_delete"):
+                        with st.spinner("Cancellazione in corso..."):
+                            deleted = qdrant_delete_by_source_prefix(selected_folder)
+                        st.success(f"✅ Cancellati {deleted} chunk dalla cartella selezionata.")
+                        time.sleep(1)
                         st.rerun()
-                    except Exception as e:
-                        st.error(f"Errore durante il reset: {str(e)}")
-                        st.session_state.reset_confirm = False
-                else:
-                    st.warning("Devi digitare esattamente 'CONFERMO' per procedere.")
+            else:
+                st.info("Nessuna cartella indicizzata trovata nel database.")
+        else:
+            st.info("La cancellazione selettiva è disponibile solo con Qdrant.")
+
+    # --- TAB 2: RESET COMPLETO ---
+    with tab_full:
+        col1, col2 = st.columns([3, 1])
+        with col1:
+            st.warning(f"""
+            **ATTENZIONE: Reset Completo del Database**
+
+            Questa azione cancellerà permanentemente:
+            - **{current_stats['total_documents']} documenti** indicizzati
+            - **{current_stats['total_chunks']} chunk** di testo
+            - Tutti i dati nel database vettoriale ({VECTOR_DB.upper()})
+
+            **Questa azione è irreversibile.** Dovrai re-indicizzare tutti i documenti.
+            """)
         with col2:
-            if st.button("Annulla", type="secondary"):
-                st.session_state.reset_confirm = False
-                st.rerun()
+            if st.button("Reset Database", type="secondary", use_container_width=True):
+                st.session_state.reset_confirm = True
+
+        if st.session_state.get("reset_confirm", False):
+            st.error("**Ultima conferma richiesta**")
+            confirm_text = st.text_input(
+                "Digita 'CONFERMO' per procedere con la cancellazione:",
+                placeholder="CONFERMO",
+            )
+
+            col1, col2 = st.columns(2)
+            with col1:
+                if st.button("Conferma Reset", type="primary"):
+                    if confirm_text == "CONFERMO":
+                        try:
+                            with st.spinner("Cancellazione database in corso..."):
+                                reset_database()
+                            st.success("Database resettato con successo.")
+                            st.info("Tutti i documenti sono stati cancellati. Puoi ora indicizzare nuovi documenti.")
+                            st.session_state.reset_confirm = False
+                            time.sleep(2)
+                            st.rerun()
+                        except Exception as e:
+                            st.error(f"Errore durante il reset: {str(e)}")
+                            st.session_state.reset_confirm = False
+                    else:
+                        st.warning("Devi digitare esattamente 'CONFERMO' per procedere.")
+            with col2:
+                if st.button("Annulla", type="secondary"):
+                    st.session_state.reset_confirm = False
+                    st.rerun()
+

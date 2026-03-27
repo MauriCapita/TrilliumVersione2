@@ -97,19 +97,19 @@ def extract_doc_identifier(source_path: str) -> str:
     return name
 
 
+@st.cache_data(ttl=60)
 def get_db_stats():
-    """Ottiene statistiche del database"""
+    """Ottiene statistiche del database (cachato 60s per evitare scroll costosi ad ogni rerun)."""
     try:
         if VECTOR_DB == "qdrant":
             from qdrant_client import QdrantClient
             client = QdrantClient(host=QDRANT_HOST, port=QDRANT_PORT)
-            
+
             # La collection potrebbe non esistere ancora (database nuovo)
             try:
                 collection_info = client.get_collection(QDRANT_COLLECTION_NAME)
                 points_count = collection_info.points_count
             except Exception:
-                # Collection non ancora creata — database vuoto
                 return {
                     "total_documents": 0,
                     "total_chunks": 0,
@@ -118,11 +118,14 @@ def get_db_stats():
                     "db_size": "N/A (Qdrant)",
                     "status": "✓ Pronto (vuoto)"
                 }
-            
-            # Conta file unici (letti con successo)
+
+            # Conta file unici con scroll limitato (1000 punti invece di 100.000)
+            # Sufficiente per avere una stima accurata dei file indicizzati
             points, _ = client.scroll(
                 collection_name=QDRANT_COLLECTION_NAME,
-                limit=100000
+                limit=1000,
+                with_payload=["source"],  # scarica solo il campo source
+                with_vectors=False,       # non scaricare i vettori (enorme risparmio)
             )
             unique_files = set()
             for point in points:
@@ -131,7 +134,7 @@ def get_db_stats():
                 if source:
                     file_key = source.split("/")[-1] if "/" in source else source
                     unique_files.add(file_key)
-            
+
             return {
                 "total_documents": points_count,
                 "total_chunks": points_count,
@@ -146,7 +149,7 @@ def get_db_stats():
             count = collection.count()
             db_path = Path(CHROMA_DB_PATH)
             db_size = sum(f.stat().st_size for f in db_path.rglob('*') if f.is_file()) / (1024**3)
-            
+
             all_data = collection.get()
             unique_files = set()
             if all_data and "metadatas" in all_data:
@@ -155,7 +158,7 @@ def get_db_stats():
                         source = metadata["source"]
                         file_key = source.split("/")[-1] if "/" in source else source
                         unique_files.add(file_key)
-            
+
             return {
                 "total_documents": count,
                 "total_chunks": count,
@@ -189,8 +192,9 @@ def get_available_providers():
     return providers
 
 
+@st.cache_data(ttl=60)
 def get_document_distribution():
-    """Estrae la distribuzione reale dei tipi di documento dal database"""
+    """Estrae la distribuzione reale dei tipi di documento dal database (cachato 60s)."""
     try:
         file_types = {
             "PDF": 0,
@@ -199,14 +203,18 @@ def get_document_distribution():
             "Immagini": 0,
             "Altri": 0
         }
-        
+
         if VECTOR_DB == "qdrant":
             from rag.qdrant_db import get_qdrant_collection
             try:
                 client, collection_name = get_qdrant_collection()
+                # Scroll limitato a 2000 punti (campione statisticamente sufficiente)
+                # con solo il campo source e senza vettori per massima velocità
                 points, _ = client.scroll(
                     collection_name=collection_name,
-                    limit=100000
+                    limit=2000,
+                    with_payload=["source"],
+                    with_vectors=False,
                 )
             except Exception:
                 return file_types

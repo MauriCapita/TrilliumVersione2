@@ -19,8 +19,8 @@ ROLE_VIEWER = "viewer"
 ROLE_ADMIN = "admin"
 
 # Pagine per ruolo
-PAGES_VIEWER = ["Dashboard", "Stima Pesi", "Database Pompe", "Analisi Disegni", "Chat RAG", "Grafo Documenti", "Configurazione", "Trend Analysis", "Manuale"]
-PAGES_ADMIN = ["Dashboard", "Stima Pesi", "Database Pompe", "Analisi Disegni", "Indicizza", "Chat RAG", "Confronta Modelli", "Grafo Documenti", "Analytics", "Configurazione", "Trend Analysis", "Manuale"]
+PAGES_VIEWER = ["Dashboard", "Stima Pesi", "Database Pompe", "Analisi Disegni", "Chat RAG", "Grafo Documenti", "TIFF Explorer", "Configurazione", "Trend Analysis", "Manuale"]
+PAGES_ADMIN = ["Dashboard", "Stima Pesi", "Database Pompe", "Analisi Disegni", "Indicizza", "Chat RAG", "Confronta Modelli", "Grafo Documenti", "Analytics", "Doc Analytics", "TIFF Explorer", "Configurazione", "Trend Analysis", "Manuale"]
 
 
 # ============================================================

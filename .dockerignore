@@ -1,0 +1,27 @@
+__pycache__/
+*.py[cod]
+*.so
+*.egg-info/
+venv/
+.env
+.git/
+.DS_Store
+*.zip
+*.tar.gz
+rag_db/
+qdrant_storage/
+*.log
+tmp/
+node_modules/
+Technical Documentation Project/
+trillium/Tes01/
+trillium/Test02/
+trillium/33+ SUPER/
+trillium/AI-doc/
+trillium/AI-weight/
+trillium/Weight Estimation Project-2/
+trillium/data/
+trillium/feedback_data.json
+trillium/semantic_cache.json
+trillium/prompt_templates.json
+trillium/rag_db/

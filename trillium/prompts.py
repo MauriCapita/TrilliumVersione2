@@ -64,6 +64,17 @@ PESO E STIMA (ISTRUZIONI SPECIFICHE V2):
 - Identifica sempre la pompa di riferimento usata per lo scaling
 - Specifica se il peso è misurato, calcolato da 3D, o stimato con scaling
 
+FORMATTAZIONE FORMULE MATEMATICHE:
+- Scrivi SEMPRE le formule in formato LaTeX.
+- Per formule inline usa la sintassi dollaro singolo: $formula$
+  Esempio: $p_{new} = p_{ref} \times f^{2.35}$
+- Per formule a blocco usa dollaro doppio: $$formula$$
+  Esempio: $$p_{new} = p_{ref} \times f^{2.35} \times \frac{\rho_{new}}{\rho_{ref}}$$
+- Usa pedici ($x_{pedice}$), apici ($x^{apice}$), frazioni (\frac{a}{b}), \
+  radici (\sqrt{x}), lettere greche (\rho, \Delta, \pi, \sigma)
+- NON scrivere MAI formule in testo piano. Esempio SBAGLIATO: "pnew = pref × f^2.35"
+  Esempio CORRETTO: $p_{new} = p_{ref} \times f^{2.35}$
+
 LINGUA:
 - Scrivi in italiano (salvo richiesta diversa dell'utente).
 - Usa la terminologia tecnica corretta ma spiega i concetti complessi.
@@ -209,7 +220,8 @@ ISTRUZIONI PER LA RISPOSTA:
 5. FORMATTAZIONE:
    - Usa titoli, sottotitoli e formattazione strutturata.
    - Usa tabelle per dati strutturati.
-   - Usa notazione matematica chiara (es. ΔP_d, U_2).
+   - FORMULE MATEMATICHE: scrivi SEMPRE in formato LaTeX (come da istruzioni di sistema).
+     Usa $...$ per inline e $$...$$ per blocchi. Mai testo piano per le formule.
    - Sii professionale: no emoji eccessive.
 
 6. LINGUA:

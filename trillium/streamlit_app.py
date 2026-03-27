@@ -17,7 +17,8 @@ setup_page()
 # Import moduli pagina
 from modules import dashboard, indexing, chat, compare, settings
 from modules import doc_graph, analytics, weight_estimation, drawing_analysis
-from modules import pump_dashboard, manual, trend_analysis
+from modules import pump_dashboard, manual, trend_analysis, doc_analytics
+from modules import tiff_explorer
 from modules.onboarding import is_onboarding_done, render_onboarding
 from modules.helpers import get_db_stats
 from config import PROVIDER, VECTOR_DB, PARALLEL_WORKERS
@@ -79,8 +80,10 @@ PAGE_LABELS = {
     "Confronta Modelli": "Confronta Modelli",
     "Grafo Documenti": "Grafo Documenti",
     "Analytics": "Analytics",
+    "Doc Analytics": "Doc Analytics",
     "Configurazione": "Configurazione",
     "Trend Analysis": "Trend Analysis",
+    "TIFF Explorer": "TIFF Explorer",
     "Manuale": "Manuale",
 }
 
@@ -119,10 +122,14 @@ with st.sidebar:
                           "come un grafo interattivo navigabile.",
         "Analytics": "Analisi avanzate sull'uso del sistema, query più frequenti e "
                     "copertura documentale.",
+        "Doc Analytics": "Dashboard metadati estratti, export Excel, validazione incrociata, "
+                        "albero documenti, confronto revisioni e deduplicazione.",
         "Configurazione": "Impostazioni del sistema: provider LLM, database, parametri "
                          "di indicizzazione e contesto di dominio.",
         "Trend Analysis": "Analisi storico stime: pattern per famiglia e materiale, "
                          "predizione costi materia prima, confronto con la media, export CSV.",
+        "TIFF Explorer": "Per ogni TIFF indicizzato mostra tutti i dati estratti dal database: "
+                         "cosa è stato recuperato e cosa manca, con filtri avanzati.",
         "Manuale": "Guida completa del sistema con esempi pratici, workflow tipici, "
                   "FAQ e spiegazione di ogni funzionalità. Un manuale sempre aggiornato.",
     }
@@ -235,3 +242,7 @@ elif page == "Trend Analysis":
     trend_analysis.render()
 elif page == "Manuale":
     manual.render()
+elif page == "Doc Analytics":
+    doc_analytics.render()
+elif page == "TIFF Explorer":
+    tiff_explorer.render()

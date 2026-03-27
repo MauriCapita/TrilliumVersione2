@@ -39,11 +39,54 @@ env/
 *.tar.gz
 *.rar
 
-# Documentazione tecnica (PDF pesanti)
+# ============================================================
+# FILE BINARI — solo sorgenti .py e .md su GitHub
+# ============================================================
+
+# Immagini tecniche
+*.tif
+*.tiff
+*.TIF
+*.TIFF
+*.bmp
+*.BMP
+*.heic
+*.heif
+*.png
+*.jpg
+*.jpeg
+*.PNG
+*.JPG
+
+# PDF
+*.pdf
+*.PDF
+
+# File Office (Excel, Word)
+*.xlsx
+*.xls
+*.xlsm
+*.xlsb
+*.XLSX
+*.XLS
+*.docx
+*.doc
+*.DOCX
+
+# Cartelle con dati pesanti
 Technical Documentation Project/
 trillium/Tes01/
-trillium/33+ SUPER/3M_MRO_33Plus_Leaflet_general.pdf
-trillium/33+ SUPER/3M_MRO_33Plus_Flyer_general.pdf
+trillium/Test02/
+trillium/33+ SUPER/
+trillium/AI-doc/
+trillium/AI-weight/
+trillium/Template/
+trillium/Weight Estimation Project-2/
+trillium/weight_engine/pump_database.json
+trillium/weight_engine/estimation_history.json
+trillium/.enrichment_cache.json
+trillium/rag/.enrichment_cache.json
+trillium/rag_db/
 
 # Database locali
 rag_db/

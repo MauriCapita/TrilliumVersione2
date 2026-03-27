@@ -887,6 +887,317 @@ def _render_ref_vs_estimate(result, ref_pump):
 
 
 # ============================================================
+# CERCA POMPE SIMILI NEL DATABASE
+# ============================================================
+
+_COMPONENT_TYPE_IT = {
+    "impeller": "Girante",
+    "casing": "Corpo",
+    "shaft": "Albero",
+    "cover": "Coperchio",
+    "bearing_housing": "Supporto",
+    "wear_ring": "Anello Usura",
+    "fastener": "Viteria",
+    "template": "Sesta Controllo",
+    "casing": "Corpo Pompa",
+    "hydraulic_layout": "Tracciato Idraulico",
+    "pattern": "Modello Fusione",
+}
+
+
+def _component_type_label(doc: dict) -> str:
+    """Restituisce etichetta tipo componente in italiano, con fallback a doc_type."""
+    ct = doc.get("component_type", "")
+    if ct and ct in _COMPONENT_TYPE_IT:
+        return _COMPONENT_TYPE_IT[ct]
+    dt = doc.get("doc_type", "")
+    return (dt or "").replace("_", " ").title() if dt else "—"
+
+
+def _render_pump_search_results(params: dict):
+    """Cerca pompe simili nel database indicizzato usando i parametri del form."""
+    import pandas as pd
+
+    family = params.get("pump_family", "")
+    nq = params.get("nq", 0)
+    d2_mm = params.get("d2_mm", 0)
+    scale_factor = params.get("scale_factor", 1.0)
+    num_stages = params.get("num_stages", 1)
+
+    # Costruisci query semantica (solo famiglia, Nq, D2 — no scale/stadi)
+    query_parts = []
+    if family:
+        query_parts.append(f"pompa centrifuga {family}")
+    if nq:
+        query_parts.append(f"velocità specifica Nq {nq}")
+    if d2_mm > 0:
+        query_parts.append(f"diametro girante D2 {d2_mm} mm")
+    query_parts.append("peso weight parts list componenti disegno tecnico datasheet")
+
+    search_query = " ".join(query_parts)
+
+    # Filtri Qdrant per metadata
+    qdrant_filters = {}
+    if family:
+        qdrant_filters["pump_family"] = family
+
+    with st.status("🔍 Ricerca pompe simili nel database...", expanded=True) as status:
+        st.write(f"**Famiglia:** {family or 'Tutte'}")
+        st.write(f"**Parametri:** Nq={nq}, D2={d2_mm}mm")
+
+        try:
+            from rag.qdrant_db import qdrant_query
+            # Prima ricerca: con filtro famiglia (max 15 risultati)
+            docs = qdrant_query(search_query, n_results=15, filters=qdrant_filters if qdrant_filters else None)
+
+            # Se pochi risultati con filtro, prova senza filtro famiglia
+            if len(docs) < 5 and family:
+                st.write("Pochi risultati con filtro famiglia, amplio la ricerca...")
+                docs_extra = qdrant_query(search_query, n_results=10, filters=None)
+                # Merge senza duplicati
+                seen_ids = {d["id"] for d in docs}
+                for d in docs_extra:
+                    if d["id"] not in seen_ids:
+                        docs.append(d)
+                        seen_ids.add(d["id"])
+
+            if not docs:
+                status.update(label="Nessuna pompa trovata", state="error")
+                st.warning("Nessun documento trovato nel database. "
+                           "Prova a indicizzare più documenti tecnici (disegni, parts list, datasheet).")
+                return
+
+            status.update(label=f"✅ Ricerca completata", state="complete")
+
+        except Exception as e:
+            status.update(label="Errore nella ricerca", state="error")
+            st.error(f"Errore connessione database: {e}")
+            return
+
+    # --- Deduplicazione: un solo record per file (miglior score + merge metadati) ---
+    seen_files = {}      # basename -> best doc
+    file_metadata = {}   # basename -> merged metadata da tutti i chunk
+    for doc in docs:
+        source = doc.get("source", "")
+        basename = os.path.basename(source) if source else "N/D"
+        score = doc.get("score", 0)
+        # Accumula metadati da tutti i chunk dello stesso file
+        if basename not in file_metadata:
+            file_metadata[basename] = {}
+        for k, v in doc.items():
+            if v is not None and v != "" and v != "—" and k not in ("text", "id", "score"):
+                file_metadata[basename][k] = v
+        # Tieni il chunk con score migliore
+        if basename not in seen_files or score > seen_files[basename].get("score", 0):
+            seen_files[basename] = doc
+
+    # Merge metadati nel doc migliore di ogni file
+    for basename, doc in seen_files.items():
+        meta = file_metadata.get(basename, {})
+        for k, v in meta.items():
+            if k not in doc or doc[k] is None or doc[k] == "" or doc[k] == "—":
+                doc[k] = v
+
+    # Filtra: se si cerca con D2, mostra solo documenti con dati reali
+    if d2_mm > 0:
+        filtered = {k: v for k, v in seen_files.items()
+                    if v.get("d2_mm") or v.get("finished_weight_kg") or v.get("has_weight")}
+        if filtered:
+            seen_files = filtered
+
+    # --- Tabella risultati ---
+    n_unique = len(seen_files)
+    st.markdown(f"#### 📋 Pompe e Documenti Trovati ({n_unique})")
+    st.caption(f"Risultati per: **{family}** | Nq={nq} | D2={d2_mm}mm")
+
+    rows = []
+    for i, (basename, doc) in enumerate(seen_files.items(), 1):
+        text = doc.get("text", "")
+        score = doc.get("score", 0)
+        doc_family = doc.get("pump_family", "—")
+        doc_type = doc.get("doc_type", "—")
+        materials = doc.get("materials", [])
+        has_weight = doc.get("has_weight", False)
+
+        # Score in percentuale
+        score_pct = round(score * 100, 1) if score <= 1.0 else round(score, 1)
+
+        # Usa metadati estratti dal componente (priorità) o regex fallback
+        import re
+        # Pesi: prima da metadati, poi regex
+        weight_val = doc.get("finished_weight_kg")
+        if weight_val:
+            weights_str = f"{weight_val} kg"
+        else:
+            weight_mentions = re.findall(r'(\d+[.,]?\d*)\s*(?:kg|Kg|KG)', text)
+            weights_str = ", ".join(weight_mentions[:5]) + " kg" if weight_mentions else "—"
+
+        # D2: prima da metadati, poi regex
+        d2_val = doc.get("d2_mm")
+        if d2_val:
+            d2_str = f"{d2_val} mm"
+        else:
+            d2_mentions = re.findall(r'[Dd]2\s*[=:]\s*(\d+)', text)
+            d2_str = ", ".join(d2_mentions[:3]) + " mm" if d2_mentions else "—"
+
+        # Nq: prima da metadati, poi regex
+        nq_val = doc.get("nq_calculated") or doc.get("nq")
+        if nq_val:
+            nq_str = str(nq_val)
+        else:
+            nq_mentions = re.findall(r'[Nn][Qq]\s*[=:]\s*(\d+[.,]?\d*)', text)
+            nq_str = ", ".join(nq_mentions[:3]) if nq_mentions else "—"
+
+        # Validazione
+        validation = doc.get("data_validation", "")
+
+        rows.append({
+            "#": i,
+            "Documento": basename[:40],
+            "Rilevanza": f"{score_pct}%",
+            "Famiglia": doc_family if doc_family != "—" else "",
+            "Tipo": _component_type_label(doc),
+            "Pesi": weights_str,
+            "D2": d2_str,
+            "Nq": nq_str,
+            "Materiali": ", ".join(materials[:3]) if materials else "—",
+            "Ha Pesi": "✅" if has_weight or weight_val else "",
+            "Valid.": validation,
+        })
+
+    if rows:
+        df = pd.DataFrame(rows)
+        st.dataframe(df, use_container_width=True, hide_index=True,
+                     column_config={
+                         "#": st.column_config.NumberColumn(width="small"),
+                         "Rilevanza": st.column_config.TextColumn(
+                             width="small",
+                             help="Similarity Coseno: misura quanto il testo del documento "
+                                  "è simile alla tua ricerca. Non è un voto di accuratezza! "
+                                  "Funziona così: il sistema converte sia la tua ricerca che il documento "
+                                  "in vettori numerici, poi misura l'angolo tra di essi. "
+                                  "Più sono 'allineati', più il punteggio è alto. "
+                                  "Un 50-60% è già un buon match per testi tecnici OCR. "
+                                  "Per confermare la corrispondenza, guarda i dati estratti (D2, Nq, Peso) "
+                                  "e la colonna Valid. (OK/KO)."
+                         ),
+                         "Ha Pesi": st.column_config.TextColumn(width="small"),
+                     })
+
+        # Metriche riepilogative
+        n_with_weight = sum(1 for r in rows if r["Ha Pesi"] == "✅")
+        n_with_d2 = sum(1 for r in rows if r["D2"] != "—")
+        n_with_nq = sum(1 for r in rows if r["Nq"] != "—")
+
+        c1, c2, c3, c4 = st.columns(4)
+        c1.metric("Documenti Trovati", len(rows))
+        c2.metric("Con Dati Peso", n_with_weight)
+        c3.metric("Con D2", n_with_d2)
+        c4.metric("Con Nq", n_with_nq)
+
+        # Dettaglio espandibile per ogni documento con dati componente
+        st.markdown("---")
+        st.markdown("#### 📄 Dettaglio Documenti")
+        for i, (basename, doc) in enumerate(seen_files.items(), 1):
+            source = doc.get("source", "N/D")
+            text = doc.get("text", "")
+            score = doc.get("score", 0)
+            score_pct = round(score * 100, 1) if score <= 1.0 else round(score, 1)
+            comp_type = _component_type_label(doc)
+
+            with st.expander(f"[{i}] {basename} — {comp_type} — {score_pct}%", expanded=(i <= 1)):
+                st.caption(f"📁 `{source}`")
+
+                # --- Scheda dati componente (se disponibili) ---
+                has_comp_data = doc.get("d2_mm") or doc.get("finished_weight_kg")
+                if has_comp_data:
+                    # Validazione
+                    val = doc.get("data_validation", "")
+                    val_icon = "✅" if val == "OK" else ("❌" if val == "KO" else "")
+                    nq_info = doc.get("nq_info", "")
+                    if val or nq_info:
+                        st.info(f"{val_icon} **Validazione: {val}** — {nq_info}")
+
+                    # --- Riga 1: Peso + Diametri ---
+                    col1, col2, col3 = st.columns(3)
+                    with col1:
+                        st.markdown("**⚖️ Peso**")
+                        fw = doc.get("finished_weight_kg")
+                        rw = doc.get("raw_weight_kg")
+                        if fw: st.write(f"Peso finito: **{fw} kg**")
+                        if rw: st.write(f"Peso grezzo: {rw} kg")
+                    with col2:
+                        st.markdown("**📐 Diametri**")
+                        for k, label in [("d2_mm","D2"), ("suction_diameter_mm","Aspirazione"),
+                                         ("hub_diameter_mm","Mozzo"), ("shaft_bore_mm","Foro albero"),
+                                         ("wear_ring_diameter_mm","Anello usura"), ("eye_diameter_mm","Occhio")]:
+                            v = doc.get(k)
+                            if v: st.write(f"{label}: **{v}** mm")
+                    with col3:
+                        st.markdown("**📏 Geometria Sezione**")
+                        for k, label in [("overall_width_mm","Larghezza totale"), ("b2_mm","b2 (uscita)"),
+                                         ("shroud_thickness_mm","Spessore shroud"), ("key_radii","Raggi")]:
+                            v = doc.get(k)
+                            if v: st.write(f"{label}: **{v}**{' mm' if isinstance(v,(int,float)) else ''}")
+
+                    # --- Riga 2: Pale + Equilibratura + Tolleranze ---
+                    col4, col5, col6 = st.columns(3)
+                    with col4:
+                        st.markdown("**🔄 Pale**")
+                        nb = doc.get("num_blades")
+                        if nb: st.write(f"N. pale: **{nb}**")
+                        bh = doc.get("blade_holes_diameter_mm")
+                        if bh: st.write(f"Fori pale: Φ{bh} mm")
+                        bc = doc.get("blade_holes_count")
+                        if bc: st.write(f"N. fori: {bc}")
+                    with col5:
+                        st.markdown("**⚖️ Equilibratura**")
+                        for k, label in [("disc_thickness_at_balance_mm","Spessore disco"),
+                                         ("balance_ref_diameter_mm","Diametro rif."),
+                                         ("min_disc_thickness_mm","Spessore min."),
+                                         ("balancing_grade","Grado")]:
+                            v = doc.get(k)
+                            if v: st.write(f"{label}: **{v}**{' mm' if 'mm' in k else ''}")
+                    with col6:
+                        st.markdown("**📋 Cartiglio**")
+                        for k, label in [("pump_model","Modello"), ("drawing_number","N. disegno"),
+                                         ("revision","Revisione"), ("description_it","Descrizione")]:
+                            v = doc.get(k)
+                            if v: st.write(f"{label}: **{v}**")
+                        sf = doc.get("surface_finishes")
+                        if sf: st.write(f"Finiture: {sf}")
+                        kt = doc.get("key_tolerances")
+                        if kt: st.write(f"Tolleranze: {kt}")
+
+                    # Tutti i diametri
+                    ad = doc.get("all_diameters")
+                    if ad:
+                        st.caption(f"🔵 Tutti i diametri: {ad}")
+
+                else:
+                    # Nessun dato componente — mostra info base
+                    if doc.get("pump_family"):
+                        st.caption(f"🏷️ Famiglia: **{doc['pump_family']}** | "
+                                  f"Tipo: {doc.get('doc_type', '—')}")
+                    snippet = text[:400].strip()
+                    if len(text) > 400:
+                        snippet += "..."
+                    st.text(snippet)
+
+                # Download
+                if source and not source.startswith(("http://", "https://")):
+                    from modules.helpers import get_file_for_download
+                    file_info = get_file_for_download(source)
+                    if file_info:
+                        file_data, name, mime = file_info
+                        st.download_button(
+                            f"📥 Scarica {name[:30]}",
+                            data=file_data, file_name=name, mime=mime,
+                            key=f"dl_pump_search_{i}",
+                        )
+
+
+# ============================================================
 # PAGINA PRINCIPALE
 # ============================================================
 
@@ -1102,32 +1413,31 @@ Questo valore viene usato per cercare giranti simili nel database."
         except Exception:
             pass
 
-        col_f, col_stages = st.columns(2)
-        with col_f:
-            scale_factor = st.number_input(
-                "Scale Factor (f)",
-                min_value=0.1, max_value=10.0, value=float(_lp.get("scale_factor", 1.0)), step=0.01,
-                help="f = D2_new / D2_ref (rapporto diametri girante nuova vs. riferimento). "
-                     "Default 1.0 = stesse dimensioni della pompa di riferimento. "
-                     "Se inserisci D2 sopra, lo scale factor viene calcolato AUTOMATICAMENTE dal disegno più simile. "
-                     "Se f=1.0: i pesi restano quelli di riferimento (nessun scaling). "
-                     "Se f>1: pompa più grande, pesi aumentano con f^2.35 (es. f=1.2 → +73% peso componenti fusione). "
-                     "Se f<1: pompa più piccola, pesi diminuiscono. "
-                     "Lascialo a 1.0 se non hai dati dimensionali.",
-            )
-        with col_stages:
-            num_stages = st.number_input(
-                "Numero Stadi",
-                min_value=1, max_value=20, value=int(_lp.get("num_stages", 1)),
-                help="Numero di stadi idraulici della pompa. "
-                     "Default 1 = pompa monostadio (OH1, OH2, BB1, BB2). "
-                     "Per pompe multistadio (BB3, BB4, BB5, VS4): imposta il numero di stadi reale. "
-                     "Ogni stadio aggiuntivo moltiplica il peso di: girante, diffusore, anelli usura, distanziale. "
-                     "Esempio: 5 stadi → girante ×5, diffusore ×5, anelli ×5. "
-                     "Lascialo a 1 per pompe standard OH2.",
-            )
+        # Scale Factor e Numero Stadi — nascosti (valori di default)
+        scale_factor = float(_lp.get("scale_factor", 1.0))
+        num_stages = int(_lp.get("num_stages", 1))
 
-        # --- Sezione 2: Condizioni di Progetto ---
+        # --- Bottone CERCA POMPE SIMILI ---
+        _search_params = {
+            "pump_family": pump_family,
+            "nq": nq,
+            "d2_mm": d2_mm,
+            "scale_factor": scale_factor,
+            "num_stages": num_stages,
+        }
+        search_pump_clicked = st.button(
+            "🔍 Cerca Pompe Simili nel Database",
+            use_container_width=True,
+            help="Cerca nel database indicizzato tutte le pompe che corrispondono "
+                 "ai parametri inseriti (famiglia, Nq, D2, scale factor). "
+                 "Mostra pesi, materiali e documenti di riferimento trovati.",
+            key="search_similar_pumps",
+        )
+
+        if search_pump_clicked:
+            _render_pump_search_results(_search_params)
+
+
         st.markdown('<div class="param-section"><h4>Condizioni di Progetto</h4></div>',
                     unsafe_allow_html=True)
         st.caption("Pressione e temperatura influenzano lo SPESSORE delle pareti — peso corpo e coperchi. "

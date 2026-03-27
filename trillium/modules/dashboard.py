@@ -1,10 +1,9 @@
 """
-Trillium RAG - Pagina Dashboard
+Trillium RAG - Pagina Dashboard (Premium Restyling)
 """
 
 import streamlit as st
 
-# Import plotly con fallback
 try:
     import plotly.express as px
     import plotly.graph_objects as go
@@ -20,116 +19,234 @@ from config import (
 from modules.helpers import get_db_stats, get_document_distribution
 
 
-def render():
-    """Renderizza la pagina Dashboard."""
-    st.markdown('<div class="main-header">Trillium RAG System</div>', unsafe_allow_html=True)
-    st.caption("ℹ️ Panoramica dello stato del sistema. "
-               "**Documenti** = file indicizzati nel DB. **Chunk** = frammenti di testo (ogni documento viene spezzato per la ricerca). "
-               "**Tasso Successo** = % file letti correttamente. "
-               "Se vedi file 'Non Letti', vai su Indicizza Documenti per verificare i formati.")
+# Icone per i provider
+PROVIDER_ICONS = {
+    "openai": "🟢",
+    "anthropic": "🟣",
+    "gemini": "🔵",
+    "openrouter": "🟠",
+}
 
-    # Statistiche principali
+# Colori palette
+COLORS = ["#16A34A", "#3B82F6", "#F59E0B", "#EF4444", "#8B5CF6"]
+
+
+def render():
+    """Renderizza la pagina Dashboard con design premium."""
+
+    # ============================================================
+    # HERO HEADER
+    # ============================================================
+    st.markdown("""
+    <div style="
+        background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 60%, #bbf7d0 100%);
+        border: 1px solid #86efac;
+        border-radius: 16px;
+        padding: 2rem 2.5rem;
+        margin-bottom: 2rem;
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+        box-shadow: 0 4px 24px -4px rgba(22, 163, 74, 0.12);
+    ">
+        <div style="font-size: 3.5rem; line-height: 1;">⚙️</div>
+        <div>
+            <h1 style="
+                margin: 0;
+                font-size: 2rem;
+                font-weight: 800;
+                color: #14532d;
+                letter-spacing: -0.03em;
+            ">Trillium V2</h1>
+            <p style="
+                margin: 0.3rem 0 0;
+                font-size: 1rem;
+                color: #166534;
+                font-weight: 400;
+            ">AI Weight Estimation System · Pompe Centrifughe API 610</p>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # ============================================================
+    # STATISTICHE
+    # ============================================================
     stats = get_db_stats()
+    file_distribution = get_document_distribution()
+    total_files = sum(file_distribution.values())
+
+    # Riga metriche con icone
+    st.markdown("### 📊 Stato del Sistema")
 
     col1, col2, col3, col4, col5 = st.columns(5)
 
     with col1:
-        st.metric("Documenti", stats["total_documents"])
+        st.metric("📄 Documenti", f"{stats['total_documents']:,}")
     with col2:
-        st.metric("Chunk", stats["total_chunks"])
+        st.metric("🧩 Chunk", f"{stats['total_chunks']:,}")
     with col3:
-        st.metric("File Letti", stats.get("files_read", 0))
+        st.metric("✅ File Letti", stats.get("files_read", 0))
     with col4:
         files_failed = stats.get("files_failed", 0)
         if files_failed > 0:
-            st.metric("File Non Letti", files_failed, delta=f"-{files_failed}", delta_color="inverse")
+            st.metric("❌ Non Letti", files_failed,
+                      delta=f"-{files_failed}", delta_color="inverse")
         else:
-            st.metric("File Non Letti", files_failed)
+            st.metric("❌ Non Letti", 0)
     with col5:
-        st.metric("Status", stats["status"])
+        total_f = stats.get("files_read", 0) + stats.get("files_failed", 0)
+        if total_f > 0:
+            pct = round((stats.get("files_read", 0) / total_f) * 100, 1)
+            st.metric("🎯 Successo", f"{pct}%")
+        else:
+            st.metric("🎯 Successo", "—")
 
     # Seconda riga
     col6, col7 = st.columns(2)
     with col6:
-        st.metric("Database", stats["db_size"])
+        status_icon = "🟢" if "Connesso" in stats["status"] or "Attivo" in stats["status"] else "🔴"
+        st.metric(f"{status_icon} Database", stats["db_size"])
     with col7:
-        total_files = stats.get("files_read", 0) + stats.get("files_failed", 0)
-        if total_files > 0:
-            success_rate = (stats.get("files_read", 0) / total_files) * 100
-            st.metric("Tasso Successo", f"{success_rate:.1f}%")
-        else:
-            st.metric("Tasso Successo", "N/A")
+        st.metric("🗄️ Status", stats["status"])
 
     st.markdown("---")
 
-    # Grafici
-    col1, col2 = st.columns(2)
+    # ============================================================
+    # GRAFICI — 2 COLONNE
+    # ============================================================
+    col_charts_left, col_charts_right = st.columns(2)
 
-    with col1:
-        st.markdown("### Distribuzione Documenti")
-        file_distribution = get_document_distribution()
-        total_files = sum(file_distribution.values())
+    with col_charts_left:
+        st.markdown("#### Distribuzione Documenti")
 
-        if total_files > 0:
-            if PLOTLY_AVAILABLE:
-                labels = list(file_distribution.keys())
-                values = list(file_distribution.values())
-                filtered_data = [(l, v) for l, v in zip(labels, values) if v > 0]
-                if filtered_data:
-                    labels_f, values_f = zip(*filtered_data)
-                    fig_pie = go.Figure(data=[go.Pie(
-                        labels=labels_f, values=values_f, hole=0.4,
-                        marker=dict(colors=["#344054", "#667085", "#98a2b3", "#d0d5dd", "#e4e7ec"])
-                    )])
-                    fig_pie.update_layout(height=300, showlegend=True, margin=dict(l=0, r=0, t=0, b=0))
-                    st.plotly_chart(fig_pie, use_container_width=True)
-                else:
-                    st.info("Nessun documento nel database.")
-            else:
-                st.dataframe({
-                    "Tipo": list(file_distribution.keys()),
-                    "Quantità": list(file_distribution.values()),
-                }, use_container_width=True)
-        else:
-            st.info("Nessun documento indicizzato. Indicizza alcuni documenti per vedere la distribuzione.")
-
-    with col2:
-        st.markdown("### Statistiche Database")
-        if PLOTLY_AVAILABLE and total_files > 0:
+        if total_files > 0 and PLOTLY_AVAILABLE:
             labels = list(file_distribution.keys())
             values = list(file_distribution.values())
-            filtered_data = [(l, v) for l, v in zip(labels, values) if v > 0]
-            if filtered_data:
-                labels_f, values_f = zip(*filtered_data)
-                fig_bar = px.bar(
-                    x=labels_f, y=values_f,
-                    labels={"x": "Tipo Documento", "y": "Quantità"},
-                    title="Documenti per Tipo",
-                    color_discrete_sequence=["#344054"],
+            filtered = [(l, v) for l, v in zip(labels, values) if v > 0]
+            if filtered:
+                lf, vf = zip(*filtered)
+                fig_pie = go.Figure(data=[go.Pie(
+                    labels=lf,
+                    values=vf,
+                    hole=0.45,
+                    marker=dict(
+                        colors=COLORS[:len(lf)],
+                        line=dict(color="#ffffff", width=2)
+                    ),
+                    textinfo="label+percent",
+                    textfont=dict(size=12, family="Inter"),
+                )])
+                fig_pie.update_layout(
+                    height=300,
+                    showlegend=False,
+                    margin=dict(l=10, r=10, t=10, b=10),
+                    paper_bgcolor="rgba(0,0,0,0)",
+                    plot_bgcolor="rgba(0,0,0,0)",
                 )
-                fig_bar.update_layout(height=300, margin=dict(l=0, r=0, t=30, b=0))
+                st.plotly_chart(fig_pie, use_container_width=True)
+        elif total_files == 0:
+            st.info("Nessun documento indicizzato ancora.")
+
+    with col_charts_right:
+        st.markdown("#### File per Tipo")
+
+        if total_files > 0 and PLOTLY_AVAILABLE:
+            filtered = [(l, v) for l, v in zip(
+                file_distribution.keys(), file_distribution.values()) if v > 0]
+            if filtered:
+                lf, vf = zip(*filtered)
+                fig_bar = go.Figure(data=[go.Bar(
+                    x=list(lf),
+                    y=list(vf),
+                    marker=dict(
+                        color=COLORS[:len(lf)],
+                        line=dict(color="rgba(0,0,0,0)"),
+                    ),
+                    text=list(vf),
+                    textposition="outside",
+                    textfont=dict(size=12),
+                )])
+                fig_bar.update_layout(
+                    height=300,
+                    margin=dict(l=10, r=10, t=10, b=10),
+                    paper_bgcolor="rgba(0,0,0,0)",
+                    plot_bgcolor="rgba(0,0,0,0)",
+                    showlegend=False,
+                    yaxis=dict(showgrid=True, gridcolor="#f0f0f0",
+                               zeroline=False, showticklabels=False),
+                    xaxis=dict(showgrid=False),
+                )
                 st.plotly_chart(fig_bar, use_container_width=True)
-            else:
-                st.metric("Documenti totali", stats["total_documents"])
-        else:
-            st.metric("Documenti totali", stats["total_documents"])
-            st.metric("Chunk totali", stats["total_chunks"])
-            if total_files == 0:
-                st.info("Indicizza documenti per vedere statistiche dettagliate.")
+        elif total_files == 0:
+            st.info("Nessun dato da mostrare.")
 
-    # Configurazione sistema
     st.markdown("---")
-    st.markdown("### Configurazione Sistema")
 
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        st.info(f"**Provider LLM:** {PROVIDER.upper()}")
-        st.info(f"**Database:** {VECTOR_DB.upper()}")
-    with col2:
-        if VECTOR_DB == "chromadb":
-            st.info(f"**Path DB:** {CHROMA_DB_PATH}")
-        else:
-            st.info(f"**Qdrant:** {QDRANT_HOST}:{QDRANT_PORT}")
-    with col3:
-        st.info(f"**Parallel Workers:** {PARALLEL_WORKERS}")
-        st.info(f"**Batch Size:** {CHUNK_BATCH_SIZE}")
+    # ============================================================
+    # CONFIGURAZIONE SISTEMA — Card stilizzate
+    # ============================================================
+    st.markdown("### ⚙️ Configurazione Sistema")
+
+    provider_icon = PROVIDER_ICONS.get(PROVIDER.lower(), "⚡")
+    db_icon = "🔷" if VECTOR_DB == "qdrant" else "🟡"
+
+    c1, c2, c3, c4 = st.columns(4)
+    with c1:
+        st.markdown(f"""
+        <div style="background:#fff;border:1px solid #e4e7ec;border-radius:12px;
+                    padding:1rem 1.2rem;box-shadow:0 2px 8px rgba(0,0,0,0.05);">
+            <div style="font-size:0.7rem;color:#6b7280;text-transform:uppercase;
+                        letter-spacing:0.8px;font-weight:600;margin-bottom:0.4rem;">
+                Provider LLM
+            </div>
+            <div style="font-size:1.1rem;font-weight:700;color:#111827;">
+                {provider_icon} {PROVIDER.upper()}
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+    with c2:
+        db_host = f"{QDRANT_HOST}:{QDRANT_PORT}" if VECTOR_DB == "qdrant" else CHROMA_DB_PATH
+        st.markdown(f"""
+        <div style="background:#fff;border:1px solid #e4e7ec;border-radius:12px;
+                    padding:1rem 1.2rem;box-shadow:0 2px 8px rgba(0,0,0,0.05);">
+            <div style="font-size:0.7rem;color:#6b7280;text-transform:uppercase;
+                        letter-spacing:0.8px;font-weight:600;margin-bottom:0.4rem;">
+                Database
+            </div>
+            <div style="font-size:1.1rem;font-weight:700;color:#111827;">
+                {db_icon} {VECTOR_DB.upper()}
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+    with c3:
+        st.markdown(f"""
+        <div style="background:#fff;border:1px solid #e4e7ec;border-radius:12px;
+                    padding:1rem 1.2rem;box-shadow:0 2px 8px rgba(0,0,0,0.05);">
+            <div style="font-size:0.7rem;color:#6b7280;text-transform:uppercase;
+                        letter-spacing:0.8px;font-weight:600;margin-bottom:0.4rem;">
+                Parallel Workers
+            </div>
+            <div style="font-size:1.1rem;font-weight:700;color:#111827;">
+                🚀 {PARALLEL_WORKERS}
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+    with c4:
+        st.markdown(f"""
+        <div style="background:#fff;border:1px solid #e4e7ec;border-radius:12px;
+                    padding:1rem 1.2rem;box-shadow:0 2px 8px rgba(0,0,0,0.05);">
+            <div style="font-size:0.7rem;color:#6b7280;text-transform:uppercase;
+                        letter-spacing:0.8px;font-weight:600;margin-bottom:0.4rem;">
+                Chunk Batch
+            </div>
+            <div style="font-size:1.1rem;font-weight:700;color:#111827;">
+                📦 {CHUNK_BATCH_SIZE}
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    # Endpoint Qdrant opzionale
+    if VECTOR_DB == "qdrant":
+        st.caption(f"🔗 Qdrant endpoint: `{QDRANT_HOST}:{QDRANT_PORT}`")
+    else:
+        st.caption(f"🗂️ ChromaDB path: `{CHROMA_DB_PATH}`")

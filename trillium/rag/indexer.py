@@ -27,7 +27,7 @@ from config import (
     CHUNK_BATCH_SIZE,
 )
 from rag.extractor import extract_text, get_image_extraction_stats, clear_image_extraction_stats
-from rag.enrich_document import enrich_fast, metadata_for_qdrant
+from rag.enrich_document import enrich_fast, metadata_for_qdrant, describe_drawing_ai
 from rich import print
 from tqdm import tqdm
 
@@ -304,6 +304,18 @@ def _index_single_file(path: str, db_collection, check_exists_func, add_document
     except Exception as e:
         print(f"[yellow]⚠ Enrichment fallito per {os.path.basename(path)}: {e}[/yellow]")
         enrichment_meta = {}
+
+    # AI Drawing Description: analisi visiva del disegno tecnico
+    if is_image:
+        try:
+            ai_desc = describe_drawing_ai(path)
+            if ai_desc:
+                enrichment_meta["ai_drawing_description"] = ai_desc[:2000]  # Limita a 2000 chars
+                # Aggiungi la descrizione AI al testo per migliorare la ricerca
+                text = text + "\n\n--- AI Drawing Description ---\n" + ai_desc
+                print(f"[green]🔍 AI description: {len(ai_desc)} chars per {os.path.basename(path)}[/green]")
+        except Exception as e:
+            print(f"[yellow]⚠ AI drawing description fallita per {os.path.basename(path)}: {e}[/yellow]")
 
     # Gestione chunk
     if len(text) > MAX_EMBEDDING_CHARS:
@@ -610,6 +622,8 @@ def index_folder_streaming(folder_path: str) -> Generator[Tuple[float, List[str]
         file_list = []
         for root, dirs, files in os.walk(folder_path):
             for f in files:
+                if f.startswith(("~$", ".", "Thumbs")) or f == ".DS_Store":
+                    continue
                 if f.lower().endswith((".pdf", ".tif", ".tiff", ".txt", ".xlsx", ".xls", ".xlsm", ".docx", ".doc", ".bmp", ".png", ".jpg", ".jpeg", ".heic", ".heif", ".log")):
                     file_list.append(os.path.join(root, f))
 
@@ -746,6 +760,8 @@ def index_folder(folder_path):
     file_list = []
     for root, dirs, files in os.walk(folder_path):
         for f in files:
+            if f.startswith(("~$", ".", "Thumbs")) or f == ".DS_Store":
+                continue
             if f.lower().endswith((".pdf", ".tif", ".tiff", ".txt", ".xlsx", ".xls", ".xlsm", ".docx", ".doc", ".bmp", ".png", ".jpg", ".jpeg", ".heic", ".heif", ".log")):
                 file_list.append(os.path.join(root, f))
 
